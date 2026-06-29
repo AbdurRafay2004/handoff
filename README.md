@@ -82,3 +82,6 @@ replace — process skills (planning, TDD, debugging) and domain skills. Its
 `tasks/` is your durable **backlog**; pair it with an implementation-plan skill
 for *executing* a single item, and an issue pipeline only for slicing a big
 feature into a queue.
+
+See [docs/SKILL-WORKFLOW.md](docs/SKILL-WORKFLOW.md) for a "what to reach for,
+when" map across agent-orch, superpowers, mattpocock, frontend-design, and rampstack.
