@@ -1,6 +1,6 @@
 {
   "name": "agent-orch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Portable project memory for coding agents: auto-loads STATUS+RULES each session, enforces folder-level CONTEXT.md on edit, nudges durable state updates at turn end, and scaffolds the system into any repo via guided discovery.",
   "author": {
     "name": "Rafay"
@@ -13,6 +13,5 @@
     "workflow"
   ],
   "license": "MIT",
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }
