@@ -78,6 +78,20 @@ templates/             # the .agent-orch/ tree copied into target repos
 - **`.agent-orch/` is committed to the target repo** so memory travels with the
   code; the *plugin* (hooks/skill) is what each developer installs.
 
+## Known limitations
+
+By design, accepted trade-offs (all fail safe — they make the hook *quieter*, never broken):
+
+- **Bash edits aren't covered by CONTEXT injection.** The PreToolUse hook matches
+  `Edit`/`Write`, not `Bash` — files changed via `sed`/`cat >` won't trigger a
+  CONTEXT.md inject (matching Bash would fire on every shell command).
+- **Very large/slow repos:** the Stop hook's `git status` has a 10s timeout; past
+  that the freshness nudge is silently skipped.
+- **`/compact` re-baselines:** changes made before a compaction fold into the new
+  baseline and won't be nudged afterward.
+- **Non-git repos:** the Stop nudge is disabled (it needs git to diff).
+- **Per-session marker files** accumulate in the OS temp dir (cleared on reboot).
+
 ## Layering with other skills
 
 agent-orch is the **state/context** layer. It composes with — and does not

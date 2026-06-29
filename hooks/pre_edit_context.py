@@ -19,10 +19,23 @@ from _common import (  # noqa: E402
 
 
 def nearest_context_md(file_path, root):
-    """Walk up from the edited file's dir to root; return path of nearest CONTEXT.md."""
+    """Walk up from the edited file's dir to root; return path of nearest CONTEXT.md.
+
+    Only acts on files inside the project root; a relative file_path is resolved
+    against the root (not the hook's cwd).
+    """
     try:
         root_abs = os.path.abspath(root)
-        d = os.path.dirname(os.path.abspath(file_path))
+        if not os.path.isabs(file_path):
+            file_path = os.path.join(root_abs, file_path)
+        fp = os.path.abspath(file_path)
+        # Ignore edits outside the project root (e.g. /tmp, $HOME).
+        try:
+            if os.path.commonpath([fp, root_abs]) != root_abs:
+                return None
+        except ValueError:  # different drives (Windows) -> not in project
+            return None
+        d = os.path.dirname(fp)
         # Stay within the project root.
         while True:
             candidate = os.path.join(d, "CONTEXT.md")
