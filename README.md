@@ -71,7 +71,10 @@ templates/             # the .agent-orch/ tree copied into target repos
   never break your session.
 - **PreToolUse never changes permissions**: it injects `additionalContext` only,
   with no `permissionDecision`, so it can't silently auto-approve edits.
-- **Stop never blocks**: it only nudges via `additionalContext`; you can ignore it.
+- **Stop can't loop**: a Stop-hook message causes one agent continuation, so the
+  nudge has three independent loop-breakers — `stop_hook_active`, a session git
+  baseline (only flags changes made *this* session, not pre-existing dirt), and a
+  nudge-signature cooldown (never repeats the same unresolved nudge).
 - **`.agent-orch/` is committed to the target repo** so memory travels with the
   code; the *plugin* (hooks/skill) is what each developer installs.
 

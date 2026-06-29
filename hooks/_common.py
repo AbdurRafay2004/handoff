@@ -6,6 +6,7 @@ here can never break the user's session.
 import hashlib
 import json
 import os
+import subprocess
 import sys
 import tempfile
 
@@ -83,6 +84,75 @@ def marker_set(path):
         return True
     except Exception:
         return False
+
+
+def git_status_paths(root):
+    """Repo-relative, normalized paths of all changed/untracked files; None on error.
+
+    -uall lists untracked files individually so new directories aren't collapsed
+    to one entry (which would hide nested CONTEXT.md folders and new files).
+    """
+    try:
+        out = subprocess.run(
+            ["git", "-C", root, "status", "--porcelain", "-uall"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if out.returncode != 0:
+            return None
+    except Exception:
+        return None
+    paths = []
+    for line in out.stdout.splitlines():
+        if len(line) < 4:
+            continue
+        entry = line[3:]
+        if " -> " in entry:  # rename: "old -> new"
+            entry = entry.split(" -> ", 1)[1]
+        paths.append(os.path.normpath(entry.strip().strip('"')))
+    return paths
+
+
+def _session_file(session_id, name):
+    return os.path.join(session_marker_dir(session_id), name)
+
+
+def load_baseline(session_id):
+    """Set of dirty paths captured at session start, or None if not captured yet."""
+    try:
+        with open(_session_file(session_id, "git-baseline"), encoding="utf-8") as fh:
+            return set(l.strip() for l in fh if l.strip())
+    except Exception:
+        return None
+
+
+def save_baseline(session_id, paths):
+    try:
+        with open(_session_file(session_id, "git-baseline"), "w", encoding="utf-8") as fh:
+            fh.write("\n".join(sorted(paths)))
+        return True
+    except Exception:
+        return False
+
+
+def last_nudge_signature(session_id):
+    try:
+        with open(_session_file(session_id, "nudge-sig"), encoding="utf-8") as fh:
+            return fh.read().strip()
+    except Exception:
+        return None
+
+
+def set_nudge_signature(session_id, sig):
+    try:
+        with open(_session_file(session_id, "nudge-sig"), "w", encoding="utf-8") as fh:
+            fh.write(sig)
+        return True
+    except Exception:
+        return False
+
+
+def signature(*parts):
+    return _short("||".join(parts))
 
 
 def emit(hook_event_name, additional_context):

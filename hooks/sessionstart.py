@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import (  # noqa: E402
     read_stdin_json, project_root, agent_base, has_agent_orch, read_file,
     data_dir, marker_seen, marker_set, emit, _short,
+    git_status_paths, save_baseline,
 )
 
 POINTER = (
@@ -31,6 +32,12 @@ def main():
     root = project_root(payload)
 
     if has_agent_orch(root):
+        # Capture the git baseline so the Stop hook only nudges about changes
+        # made DURING this session, not pre-existing uncommitted dirt.
+        paths = git_status_paths(root)
+        if paths is not None:
+            save_baseline(payload.get("session_id"), set(paths))
+
         base = agent_base(root)
         parts = []
         for name in ("STATUS.md", "RULES.md"):

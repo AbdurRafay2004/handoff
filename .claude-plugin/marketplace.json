@@ -9,7 +9,7 @@
       "name": "agent-orch",
       "source": "./",
       "description": "Portable project memory for coding agents: auto-loads STATUS+RULES each session, enforces folder-level CONTEXT.md on edit, nudges state updates at turn end, and scaffolds the whole system into any repo via guided discovery.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "Rafay"
       },

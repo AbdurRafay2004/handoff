@@ -1,57 +1,37 @@
 #!/usr/bin/env python3
-"""Stop hook (non-blocking nudge).
+"""Stop hook (nudge to keep durable state fresh).
 
-When a turn ends, check git for changed files. If project work changed but the
-durable state wasn't updated, nudge:
-  - STATUS.md / CHANGELOG.md not updated despite code/config changes.
-  - A folder whose files changed has a CONTEXT.md that wasn't updated.
+Nudges when the agent made NEW repo changes this session but didn't update
+STATUS / CHANGELOG, or left a folder's CONTEXT.md stale.
 
-Pure nudge via additionalContext -- never blocks, never loops.
-Only fires in repos that have .agent-orch/.
+Three independent loop-breakers so it can never run away (the failure that
+prompted this design):
+  1. stop_hook_active  -> if we're already in a stop-triggered continuation, exit.
+  2. session baseline  -> only consider changes NEW since SessionStart captured
+                          the baseline, so pre-existing uncommitted dirt is ignored.
+  3. nudge signature   -> never nudge twice for the same unresolved situation,
+                          even if (1) doesn't fire for additionalContext continuations.
+
+Only fires in repos that have .agent-orch/ and are git repos.
 """
 import os
-import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import (  # noqa: E402
     read_stdin_json, project_root, has_agent_orch, emit, AGENT_DIR,
+    git_status_paths, load_baseline, save_baseline,
+    last_nudge_signature, set_nudge_signature, signature,
 )
 
 
-def changed_paths(root):
-    """Return repo-relative paths of all changed/untracked files, or None on error."""
-    try:
-        out = subprocess.run(
-            # -uall lists untracked files individually instead of collapsing
-            # whole new directories to one entry (which would hide nested
-            # CONTEXT.md folders and miss new files).
-            ["git", "-C", root, "status", "--porcelain", "-uall"],
-            capture_output=True, text=True, timeout=10,
-        )
-        if out.returncode != 0:
-            return None
-    except Exception:
-        return None
-
-    paths = []
-    for line in out.stdout.splitlines():
-        if len(line) < 4:
-            continue
-        entry = line[3:]
-        if " -> " in entry:  # rename: "old -> new"
-            entry = entry.split(" -> ", 1)[1]
-        paths.append(entry.strip().strip('"'))
-    return paths
-
-
 def nearest_context_rel(rel_path, root):
-    """Walk up a repo-relative changed file to find the nearest CONTEXT.md (repo-relative)."""
+    """Nearest ancestor CONTEXT.md (repo-relative) for a changed file, or None."""
     d = os.path.dirname(rel_path)
     while True:
         candidate = os.path.join(d, "CONTEXT.md") if d else "CONTEXT.md"
         if os.path.isfile(os.path.join(root, candidate)):
-            return candidate
+            return os.path.normpath(candidate)
         if not d:
             return None
         d = os.path.dirname(d)
@@ -59,46 +39,66 @@ def nearest_context_rel(rel_path, root):
 
 def main():
     payload = read_stdin_json()
+
+    # Loop-breaker 1: don't act while already continuing from a stop hook.
+    if payload.get("stop_hook_active"):
+        sys.exit(0)
+
     root = project_root(payload)
     if not has_agent_orch(root):
         sys.exit(0)
 
-    paths = changed_paths(root)
-    if not paths:
+    current = git_status_paths(root)
+    if current is None:  # not a git repo / git error -> freshness nudge disabled
+        sys.exit(0)
+    current_set = set(current)
+    session_id = payload.get("session_id")
+
+    # Loop-breaker 2: compare to the session baseline. If SessionStart never
+    # captured one (e.g. session predates this), establish it now and stay quiet
+    # this turn -- we can't tell which changes are from this session yet.
+    baseline = load_baseline(session_id)
+    if baseline is None:
+        save_baseline(session_id, current_set)
         sys.exit(0)
 
-    status_md = os.path.join(AGENT_DIR, "STATUS.md")
-    changelog_md = os.path.join(AGENT_DIR, "CHANGELOG.md")
-    changed_set = set(os.path.normpath(p) for p in paths)
+    new_changes = current_set - baseline
+    new_work = [p for p in new_changes if not p.startswith(AGENT_DIR + os.sep)]
+    if not new_work:
+        sys.exit(0)
 
-    # Project work = any change outside .agent-orch/.
-    work_changed = any(not p.startswith(AGENT_DIR + os.sep) for p in paths)
+    status_md = os.path.normpath(os.path.join(AGENT_DIR, "STATUS.md"))
+    changelog_md = os.path.normpath(os.path.join(AGENT_DIR, "CHANGELOG.md"))
 
+    # STATUS is the floor; CHANGELOG rides with it. Once the agent has engaged
+    # with durable state (STATUS is dirty), stop nagging about STATUS/CHANGELOG.
     notes = []
-    if work_changed:
-        if os.path.normpath(status_md) not in changed_set:
-            notes.append("STATUS.md was not updated")
-        if os.path.normpath(changelog_md) not in changed_set:
+    if status_md not in current_set:
+        notes.append("STATUS.md was not updated")
+        if changelog_md not in current_set:
             notes.append("CHANGELOG.md was not updated (add an entry if the change is meaningful)")
 
-    # CONTEXT.md freshness: folders with changes whose CONTEXT.md wasn't touched.
-    stale_contexts = set()
-    for p in paths:
-        if p.startswith(AGENT_DIR + os.sep):
-            continue
+    stale = set()
+    for p in new_work:
         ctx = nearest_context_rel(p, root)
-        if ctx and os.path.normpath(ctx) not in changed_set:
-            stale_contexts.add(ctx)
+        if ctx and ctx not in current_set:
+            stale.add(ctx)
 
-    if not notes and not stale_contexts:
+    if not notes and not stale:
         sys.exit(0)
 
-    msg = ["agent-orch reminder — project files changed this turn:"]
-    for n in notes:
-        msg.append("  - " + n)
-    for c in sorted(stale_contexts):
-        msg.append("  - {} may need updating for the folder you edited".format(c))
-    msg.append("Update durable state before wrapping up (see .agent-orch/BOOT.md).")
+    # Loop-breaker 3: never repeat the same nudge. Signature covers what changed
+    # and what we'd nag about; identical situation -> stay silent.
+    sig = signature("|".join(sorted(new_work)), "|".join(sorted(notes)), "|".join(sorted(stale)))
+    if last_nudge_signature(session_id) == sig:
+        sys.exit(0)
+    set_nudge_signature(session_id, sig)
+
+    msg = ["agent-orch reminder — you changed project files this session:"]
+    msg += ["  - " + n for n in notes]
+    msg += ["  - {} may need updating for the folder you edited".format(c) for c in sorted(stale)]
+    msg.append("Update durable state before wrapping up (see .agent-orch/BOOT.md). "
+               "If no update is warranted, you can ignore this — it won't repeat for the same changes.")
     emit("Stop", "\n".join(msg))
 
 
