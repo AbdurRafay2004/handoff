@@ -115,9 +115,14 @@ def git_status_codes(root):
             continue
         code, path = t[:2], t[3:]
         codes[os.path.normpath(path)] = code
-        # In -z format a rename/copy is followed by an extra NUL token: the OLD path.
-        if code[0] in ("R", "C") and i + 1 < len(toks) and toks[i + 1]:
-            codes[os.path.normpath(toks[i + 1])] = "D "
+        # In -z format a rename/copy in EITHER column ('R ', ' R', 'C ', ' C')
+        # is followed by an extra NUL token: the OLD path. Always consume it so
+        # it can't be misparsed as a status entry. Renames record the old path
+        # as a departure; a copy's source still exists unchanged, so for C the
+        # token is consumed but not recorded.
+        if ("R" in code or "C" in code) and i + 1 < len(toks) and toks[i + 1]:
+            if "R" in code:
+                codes[os.path.normpath(toks[i + 1])] = "D "
             i += 1
         i += 1
     return codes
@@ -143,32 +148,47 @@ def git_head(root):
         return None
 
 
-def git_diff_codes(root, base_sha):
-    """path -> one-letter status for changes COMMITTED since base_sha; None on error.
+def git_local_commit_codes(root, base_sha, cap=50):
+    """path -> one-letter status across commits made since base_sha that exist
+    ONLY locally (not reachable from any remote-tracking ref); None on error.
 
-    --no-renames splits a rename into D(old)+A(new) so both sides are visible;
-    -z avoids all path quoting.
+    Filtering by --not --remotes keeps upstream commits brought in by
+    pull/merge/rebase out of the "this session's work" set. Local commits that
+    were already pushed are also excluded — a deliberate quieter-not-noisier
+    trade-off for an advisory nudge.
     """
     if not base_sha:
         return None
     try:
         out = subprocess.run(
-            ["git", "-C", root, "diff", "--name-status", "--no-renames", "-z",
-             base_sha, "HEAD"],
+            ["git", "-C", root, "rev-list", "--max-count", str(cap),
+             base_sha + "..HEAD", "--not", "--remotes"],
             capture_output=True, text=True, timeout=10,
         )
         if out.returncode != 0:
             return None
+        shas = [l.strip() for l in out.stdout.splitlines() if l.strip()]
     except Exception:
         return None
-    toks = out.stdout.split("\0")
     codes = {}
-    i = 0
-    while i + 1 < len(toks):
-        st, path = toks[i], toks[i + 1]
-        if st and path:
-            codes[os.path.normpath(path)] = st[:1]
-        i += 2
+    for sha in shas:
+        try:
+            show = subprocess.run(
+                ["git", "-C", root, "show", "--name-status", "--no-renames",
+                 "-z", "--format=", sha],
+                capture_output=True, text=True, timeout=10,
+            )
+            if show.returncode != 0:
+                continue
+        except Exception:
+            continue
+        toks = show.stdout.split("\0")
+        i = 0
+        while i + 1 < len(toks):
+            st, path = toks[i], toks[i + 1]
+            if st and path:
+                codes[os.path.normpath(path)] = st[:1]
+            i += 2
     return codes
 
 
@@ -190,11 +210,36 @@ def _session_file(session_id, name):
     return os.path.join(session_marker_dir(session_id), name)
 
 
+def _esc_path(p):
+    """Escape a path for the newline-delimited baseline file."""
+    return p.replace("\\", "\\\\").replace("\n", "\\n")
+
+
+def _unesc_path(p):
+    out = []
+    i = 0
+    while i < len(p):
+        if p[i] == "\\" and i + 1 < len(p):
+            nxt = p[i + 1]
+            if nxt == "n":
+                out.append("\n")
+                i += 2
+                continue
+            if nxt == "\\":
+                out.append("\\")
+                i += 2
+                continue
+        out.append(p[i])
+        i += 1
+    return "".join(out)
+
+
 def load_baseline(session_id):
     """(head_sha_or_None, {path: code}) captured at session start; None if absent.
 
     Backward compatible: pre-v1.4 baselines were bare path lists — those load
-    as (None, {path: ""}) so a session spanning an upgrade degrades gracefully.
+    as (None, {path: ""}); callers treat code "" as "present at baseline,
+    code unknown" and must NOT count such paths as session-changed.
     """
     try:
         with open(_session_file(session_id, "git-baseline"), encoding="utf-8") as fh:
@@ -209,7 +254,7 @@ def load_baseline(session_id):
             sha = val if val and val != "-" else None
         elif "\t" in line:
             code, path = line.split("\t", 1)
-            codes[path] = code
+            codes[_unesc_path(path)] = code
         else:  # legacy bare-path format
             codes[line] = ""
     return (sha, codes)
@@ -220,7 +265,7 @@ def save_baseline(session_id, sha, codes):
         with open(_session_file(session_id, "git-baseline"), "w", encoding="utf-8") as fh:
             fh.write("#sha {}\n".format(sha or "-"))
             for path in sorted(codes):
-                fh.write("{}\t{}\n".format(codes[path], path))
+                fh.write("{}\t{}\n".format(codes[path], _esc_path(path)))
         return True
     except Exception:
         return False

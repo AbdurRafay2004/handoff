@@ -37,7 +37,9 @@ changelog entries unless the current task needs them.
 
 State updates ride in the **same commit** as the code they describe. Update
 docs first, then commit once — never commit code and follow with a docs-only
-commit (if you already committed and haven't pushed, amend).
+commit. If you already committed: amend ONLY when the commit is unpushed AND
+is your own work from this session (never a merge commit or someone else's);
+otherwise a follow-up commit is acceptable.
 
 1. `CHANGELOG.md` — required for every meaningful code/behavior/config change
    (detail lives here)

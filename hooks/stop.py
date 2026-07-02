@@ -21,14 +21,15 @@ prompted this design):
 Only fires in repos that have .agent-orch/ and are git repos.
 """
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import (  # noqa: E402
     read_stdin_json, project_root, has_agent_orch, emit, AGENT_DIR,
-    git_status_codes, git_head, git_diff_codes, load_baseline, save_baseline,
-    last_nudge_signature, set_nudge_signature, signature, read_file,
-    session_marker_dir, marker_seen, marker_set, _short,
+    git_status_codes, git_head, git_local_commit_codes, load_baseline,
+    save_baseline, last_nudge_signature, set_nudge_signature, signature,
+    read_file, session_marker_dir, marker_seen, marker_set, _short,
 )
 
 TASKS_ROOT_ALLOWED = ("WORKFLOW.md", "TEMPLATE.md")
@@ -75,6 +76,29 @@ def sentinel_patterns(root):
     return DEFAULT_SENTINELS
 
 
+def sentinel_hit(path, pats):
+    """True if a path matches a sentinel pattern on whole-token boundaries.
+
+    Bare substring matching false-positives badly ("auth" in docs/authors.md,
+    ".env" in .envrc). Alphanumeric patterns must equal a whole path token
+    (singular or plural); dotted patterns like ".env" must equal a whole path
+    segment or be its dotted prefix (.env.local yes, .envrc no).
+    """
+    path_l = path.lower()
+    tokens = None
+    for pat in pats:
+        if any(not (c.isalnum()) for c in pat):
+            for seg in path_l.split("/"):
+                if seg == pat or seg.startswith(pat + "."):
+                    return True
+        else:
+            if tokens is None:
+                tokens = set(re.split(r"[^a-z0-9]+", path_l))
+            if pat in tokens or pat + "s" in tokens:
+                return True
+    return False
+
+
 def main():
     payload = read_stdin_json()
 
@@ -100,95 +124,109 @@ def main():
         sys.exit(0)
     base_sha, base_codes = base
 
-    # Session-changed = committed since baseline HEAD + dirty paths whose
-    # status code is new or changed since baseline.
-    committed = git_diff_codes(root, base_sha) or {}
+    # Session-changed = local-only commits since baseline HEAD (upstream
+    # commits from pull/merge don't count as this session's work) + dirty
+    # paths whose status code is new or changed since baseline. Legacy
+    # baselines carry code "" = "present, code unknown" — those paths are
+    # pre-existing dirt and must not be counted.
+    committed = git_local_commit_codes(root, base_sha) or {}
     session_changed = dict(committed)
     for p, c in codes.items():
-        if base_codes.get(p) != c:
+        bc = base_codes.get(p)
+        if bc is None:
+            session_changed[p] = c
+        elif bc != "" and bc != c:
             session_changed[p] = c
 
     new_work = [p for p in session_changed
                 if not p.startswith(AGENT_DIR + os.sep)]
-    if not new_work:
+
+    # An open T3 gate must be surfaced even when the session made no changes
+    # (e.g. an autonomous loop idling at the gate) — check before the
+    # no-new-work exit. Everything else requires new work.
+    gate = read_file(os.path.join(root, AGENT_DIR, "GATE"))
+    if not new_work and not gate:
         sys.exit(0)
 
-    # A durable-state file counts as updated if it changed this session,
-    # whether that change is still dirty or already committed.
-    updated = set(session_changed)
+    # A durable-state file counts as updated if it changed this session
+    # (dirty-code change or local commit) OR is currently dirty at all — a
+    # file that was already dirty at baseline and was edited again this
+    # session keeps the same porcelain code, so plain dirtiness must count.
+    updated = set(session_changed) | set(codes)
     status_md = os.path.normpath(os.path.join(AGENT_DIR, "STATUS.md"))
     changelog_md = os.path.normpath(os.path.join(AGENT_DIR, "CHANGELOG.md"))
     map_md = os.path.normpath(os.path.join(AGENT_DIR, "MAP.md"))
 
     # STATUS is the floor; CHANGELOG rides with it. Once the agent has engaged
-    # with durable state, stop nagging about STATUS/CHANGELOG.
+    # with durable state, stop nagging about STATUS/CHANGELOG. All state notes
+    # require new work; the GATE note alone does not.
     notes = []
-    if status_md not in updated:
-        notes.append("STATUS.md was not updated")
-        if changelog_md not in updated:
-            notes.append("CHANGELOG.md was not updated (add an entry if the change is meaningful)")
+    strays = []
+    stray_note = None
+    stale = set()
+    if new_work:
+        if status_md not in updated:
+            notes.append("STATUS.md was not updated")
+            if changelog_md not in updated:
+                notes.append("CHANGELOG.md was not updated (add an entry if the change is meaningful)")
 
-    # MAP.md: only relevant when the session's new work added/removed/renamed
-    # files (structural change), not on ordinary edits.
-    structural = [p for p in new_work
-                  if any(ch in session_changed.get(p, "") for ch in STRUCTURAL_LETTERS)]
-    if structural and map_md not in updated:
-        notes.append("files were added/removed/renamed this session but MAP.md was "
-                     "not updated (update it only if important files changed)")
+        # MAP.md: only relevant when the session's new work added/removed/renamed
+        # files (structural change), not on ordinary edits.
+        structural = [p for p in new_work
+                      if any(ch in session_changed.get(p, "") for ch in STRUCTURAL_LETTERS)]
+        if structural and map_md not in updated:
+            notes.append("files were added/removed/renamed this session but MAP.md was "
+                         "not updated (update it only if important files changed)")
 
-    # STATUS bloat: it is injected every session, so size drift is a per-session
-    # token tax. Nudge past the threshold (documented target is <=25 lines).
-    try:
+        # STATUS bloat: it is injected every session, so size drift is a
+        # per-session token tax (documented target is <=25 lines).
         status_body = read_file(os.path.join(root, status_md))
         if status_body:
             n_lines = status_body.count("\n") + 1
             if n_lines > STATUS_LINE_BUDGET:
                 notes.append("STATUS.md is {} lines (target <=25) — prune it; history "
                              "belongs in CHANGELOG.md, follow-ups in tasks/".format(n_lines))
-    except Exception:
-        pass
 
-    # Sentinel paths: money/auth/data/migrations are T3 by definition. This is
-    # advisory — it forces the tier question into the transcript.
-    pats = sentinel_patterns(root)
-    hits = sorted({p for p in new_work if any(s in p.lower() for s in pats)})
-    if hits:
-        shown = ", ".join(hits[:4]) + (" …" if len(hits) > 4 else "")
-        notes.append("this session touched sentinel paths ({}) — such changes are T3 "
-                     "by definition (money/auth/data/migrations): confirm the T3 gates "
-                     "(approved plan, tdd, security review) were applied, or state why "
-                     "this is genuinely not T3".format(shown))
+        # Sentinel paths: money/auth/data/migrations are T3 by definition. This
+        # is advisory — it forces the tier question into the transcript.
+        pats = sentinel_patterns(root)
+        hits = sorted({p for p in new_work if sentinel_hit(p, pats)})
+        if hits:
+            shown = ", ".join(hits[:4]) + (" …" if len(hits) > 4 else "")
+            notes.append("this session touched sentinel paths ({}) — such changes are T3 "
+                         "by definition (money/auth/data/migrations): confirm the T3 gates "
+                         "(approved plan, tdd, security review) were applied, or state why "
+                         "this is genuinely not T3".format(shown))
+
+        # Task files parked in tasks/ root instead of a status folder. The note
+        # is SHOWN at most once per session per stray-set (they are often
+        # pre-existing), but the stray-set always participates in the signature
+        # so suppressing the note can't defeat the cooldown.
+        strays = misfiled_tasks(root)
+        if strays:
+            smarker = os.path.join(session_marker_dir(session_id),
+                                   "strays-" + _short("|".join(strays)))
+            if not marker_seen(smarker):
+                marker_set(smarker)
+                shown = ", ".join(strays[:5]) + (" …" if len(strays) > 5 else "")
+                stray_note = ("task file(s) sitting in tasks/ root — move into a status "
+                              "folder (inbox/, now/, done/) with matching frontmatter "
+                              "status: " + shown)
+
+        for p in new_work:
+            ctx = nearest_context_rel(p, root)
+            if ctx and ctx not in updated:
+                stale.add(ctx)
 
     # Open T3 gate: machine-readable stall marker (see the workflow skill).
-    gate = read_file(os.path.join(root, AGENT_DIR, "GATE"))
+    # Surfaced even with no new work; repeats for an unchanged situation are
+    # deduped by the signature cooldown like every other note.
     if gate:
         first = gate.splitlines()[0][:200]
         notes.append("a T3 gate is OPEN (.agent-orch/GATE): \"{}\" — do not proceed "
                      "past it; wait for the user's ruling. Autonomous goals/loops must "
                      "idle at this gate. Delete .agent-orch/GATE once the user has "
                      "ruled".format(first))
-
-    # Task files parked in tasks/ root instead of a status folder. The note is
-    # SHOWN at most once per session per stray-set (they are often
-    # pre-existing), but the stray-set always participates in the signature so
-    # suppressing the note can't change the signature and defeat the cooldown.
-    strays = misfiled_tasks(root)
-    stray_note = None
-    if strays:
-        smarker = os.path.join(session_marker_dir(session_id),
-                               "strays-" + _short("|".join(strays)))
-        if not marker_seen(smarker):
-            marker_set(smarker)
-            shown = ", ".join(strays[:5]) + (" …" if len(strays) > 5 else "")
-            stray_note = ("task file(s) sitting in tasks/ root — move into a status "
-                          "folder (inbox/, now/, done/) with matching frontmatter "
-                          "status: " + shown)
-
-    stale = set()
-    for p in new_work:
-        ctx = nearest_context_rel(p, root)
-        if ctx and ctx not in updated:
-            stale.add(ctx)
 
     if not notes and not stray_note and not stale:
         sys.exit(0)

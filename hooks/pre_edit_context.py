@@ -84,15 +84,11 @@ def main():
         sys.exit(0)
 
     # Task files belong in inbox/now/done — catch a root-level write before it
-    # lands. Corrected at most once per file per session (repeat writes to the
-    # same stray already got the message).
+    # lands. Corrected on EVERY attempt: the injection doesn't block the write,
+    # and after a /compact the earlier correction is gone from context, so a
+    # once-per-session cap would let repeat writes land unchallenged.
     stray = misfiled_task_write(file_path, root)
     if stray:
-        sdir = session_marker_dir(payload.get("session_id"))
-        tmarker = os.path.join(sdir, "taskroot-" + _short(stray))
-        if marker_seen(tmarker):
-            sys.exit(0)
-        marker_set(tmarker)
         emit(
             "PreToolUse",
             "agent-orch: `{}` is being written to `.agent-orch/tasks/` ROOT. Task "
