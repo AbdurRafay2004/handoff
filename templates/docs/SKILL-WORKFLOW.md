@@ -62,8 +62,28 @@ If heavy process lands on a light task: say "this is T1". That ruling stands.
 | Full security audit | `agent-orch:security` (diff-only: `/security-review`) |
 | Search/build would flood context | `agent-orch:delegate` |
 | New repo (mine or client) | `agent-orch:setup`, then `setup-pre-commit` + `git-guardrails-claude-code` (one-time hardening) |
-| Watch a deploy / recurring check | built-in `/loop` or `schedule` |
+| Watch a deploy / recurring check | `/loop` (self-paced) — or `schedule` if unattended |
+| Grind the backlog / drive work to done | `/goal` with a measurable condition (tiers still gate T3) |
+| Nightly client-site QA | `schedule` + `agent-orch:browser-qa` |
 | Merge conflict mid-ship | `resolving-merge-conflicts` |
+
+## Time operators — goal, loop, schedule (built-in)
+
+Not phases — they run phases *across time*. Pick by the question:
+
+- **`/goal <condition>`** — *keep working until WHAT?* Persistent objective,
+  auto-checked each turn by a fast model, clears when met. Best:
+  `/goal tasks/now/ is empty` (backlog grinder), `/goal all tests pass and
+  lint is clean`. Add a bound: "…or stop after 20 turns".
+- **`/loop`** — *re-run WHEN, while I'm at the machine?* Fixed interval
+  (`/loop 5m check the deploy`) or self-paced (prompt only — usually cheaper,
+  can Monitor instead of poll). Session-scoped; dies with a new conversation.
+- **`schedule`** — *run WHEN, while I'm gone?* Cloud cron, machine off, 1h
+  minimum. Best: nightly `browser-qa` against client production sites.
+
+**Tier guardrail:** an autonomous goal/loop may drive T1/T2 to completion, but
+a T3 approval gate ALWAYS outranks the goal — it stops and waits for me.
+Never let "empty the backlog" self-approve money/auth/data work.
 
 ## Occasional / opt-in
 
