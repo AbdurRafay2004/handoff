@@ -14,13 +14,13 @@ evidence. **NEVER fix anything.** Fixes go through the normal Build/Verify loop
 
 ## Tier plan
 
-Match effort to the tier the `workflow` skill assigned (or infer from the change size):
+Match effort to the tier the `workflow` skill assigned (or infer from the change's risk):
 
 | Tier | What to do |
 |------|------------|
 | **T1** (typo, comment, config-only) | Skip browser QA entirely. Say so and stop. |
-| **T2** (small feature, bug fix) | Smoke the affected routes only: load, console clean, no failed requests, screenshot, one DOM assert per route. |
-| **T3** (large feature, refactor, pre-ship) | Full plan: affected routes **plus** adjacent routes and the top navigation targets, per-page checklist on each, health score with all categories. |
+| **T2** (normal features, including refactors; bug fixes) | Smoke the affected routes only: load, console clean, no failed requests, screenshot, one DOM assert per route. |
+| **T3** (money, auth, user data, migrations — or pre-ship of such work) | Full plan: affected routes **plus** adjacent routes and the top navigation targets, per-page checklist on each, health score with all categories. |
 
 Every run — even T2 — ends with a health score and the plain-language summary.
 
@@ -126,6 +126,9 @@ user sees it inline.
 5. **Console + network** — zero new JS errors or failed requests after interactions.
 6. **Navigation** — paths in and out work; browser back doesn't break the app.
 7. **Responsive** (if the change touched layout) — re-run at `viewport: { width: 375, height: 812 }`.
+8. **Accessibility** — interactive elements are keyboard-reachable (Tab order works); images have alt text.
+9. **Performance** — page is interactive under ~3s on the dev server; no single request over 2MB.
+10. **Content** — no lorem/placeholder text or broken images.
 
 Spend depth where users spend time: homepage, dashboard, checkout, search — not
 the terms-of-service page.

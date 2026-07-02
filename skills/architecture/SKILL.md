@@ -103,7 +103,8 @@ Side effects happen inline as decisions crystallize:
   to the domain notes in `.agent-orch/context/`. Sharpened a fuzzy term mid-
   conversation? Update it right there.
 - **User rejects the candidate with a load-bearing reason?** Offer to record it —
-  in `.agent-orch/context/LEARNINGS.md` or as an ADR in `docs/adr/` — framed as:
+  in `.agent-orch/context/LEARNINGS.md` as a `pitfall` entry ("rejected: X
+  because Y") or as an ADR in `docs/adr/` — framed as:
   *"Want me to record this so future architecture scans don't re-suggest it?"*
   Only offer when a future explorer would actually need the reason; skip
   ephemeral ones ("not worth it right now") and self-evident ones.

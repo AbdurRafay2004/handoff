@@ -79,7 +79,7 @@ their results, not "the page looked fine".
 
 | Tier | Depth | Check |
 |------|-------|-------|
-| T1 | Smoke, ~2 min | Page loads; no console errors; title present; exactly one H1; no broken images or missing alts; canonical points at production, never staging |
+| T1 | Minimal | Typecheck + lint + affected test; browser QA only if the change is user-visible (see `browser-qa` — it skips T1 by default) |
 | T2 | Standard, ~10 min | Smoke + meta description and og/twitter tags; sane heading hierarchy; `lang` attribute and favicon; `target="_blank"` links have `noopener`; responsive at 375/768/1440px; primary user flow exercised end to end |
 | T3 | Full, 30+ min | Standard + every form submits and validates; cross-browser (at least Chrome + Safari); internal and external links resolve; security headers (HSTS, X-Frame-Options, X-Content-Type-Options); HTTPS only, no mixed content; 404s return HTTP 404; analytics events fire; cache headers sane |
 

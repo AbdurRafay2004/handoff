@@ -209,7 +209,8 @@ Phase | File:Line`). Confidence display: 9-10 and 7-8 show normally; 5-6 show
 with a verify-this caveat; 3-4 appendix only; 1-2 only if severity would be P0.
 
 **Leaked-secret playbook:** revoke → rotate → scrub history (`git
-filter-repo`/BFG) → force-push → audit the exposure window → check provider
+filter-repo`/BFG) → force-push (the one sanctioned force-push — user approval
+required; see `ship`) → audit the exposure window → check provider
 audit logs for abuse. Recommend a `.gitleaks.toml`/secretlint config if absent.
 
 **Remediation roadmap:** for the top 5 findings, present options with a

@@ -130,7 +130,8 @@ Write the regression test **before the fix** — but only at a **correct seam**:
 one that exercises the real bug pattern as it occurs at the call site. A
 too-shallow seam (unit test that can't replicate the triggering chain) gives
 false confidence. **If no correct seam exists, that is itself a finding** —
-document it and flag the architecture (see `design`).
+document it and flag the architecture (see `design`), or hand off to
+`architecture` for a structured scan.
 
 1. Turn the minimised repro into a failing test at that seam (see `tdd`).
 2. Watch it fail. 3. Apply ONE fix addressing the root cause — no "while I'm
@@ -148,8 +149,10 @@ fixes require massive refactoring, new symptoms keep appearing. Stop fixing
 symptoms and question the pattern itself — discuss with the user before any
 fourth attempt. This is not a failed hypothesis; it's a wrong architecture.
 Offer the escalation explicitly: **A)** continue with a genuinely new, named
-hypothesis; **B)** escalate for human review; **C)** instrument and wait —
-catch it live. Three *refuted hypotheses* in a row is the same signal.
+hypothesis; **B)** escalate for architectural review — invoke the
+`architecture` skill (proactive friction scan → candidate cards → decision);
+**C)** instrument and wait — catch it live. Three *refuted hypotheses* in a
+row is the same signal.
 
 ## Phase 6 — Cleanup + post-mortem
 

@@ -23,6 +23,8 @@ Copy the bundled `templates/` into the project as `.agent-orch/`, preserving
 structure (BOOT, RULES, STATUS, MAP, CHANGELOG, context/, docs/ with
 SKILL-WORKFLOW.md, tasks/ with inbox/now/done). Keep the `.gitkeep` files.
 Do not edit RULES' universal section.
+Write the current plugin version into `.agent-orch/VERSION` (single line) — the
+SessionStart hook uses it for template-drift detection.
 
 ## 2. Guided discovery (read the repo — do not guess)
 Read what actually exists, quietly:
@@ -70,7 +72,8 @@ two first. Hard rules (always apply):
 - Preserve user work; never delete/overwrite/revert changes unless asked.
 - Never `git add -A` / `git add .` for a scoped commit — stage only what you changed.
 - Verify with the commands in `.agent-orch/context/TECH_STACK.md` before claiming done.
-- Update `.agent-orch/STATUS.md` + `CHANGELOG.md` whenever code or config changes.
+- Update `.agent-orch/STATUS.md` + `CHANGELOG.md` whenever code or config changes —
+  before committing, in the same commit as the change.
 ```
 
 ## 6. Finish
@@ -78,5 +81,7 @@ Tell the user: setup is complete; the SessionStart hook will load STATUS+RULES
 from the next session; the PreToolUse hook injects any folder's CONTEXT.md on
 edit; the Stop hook nudges state updates. They can edit `.agent-orch/*` directly
 anytime. Re-run this skill only to refresh discovery or start over.
+Also tell them the repo now has a tiered 6-phase workflow — point them at
+`.agent-orch/docs/SKILL-WORKFLOW.md` and the `workflow` skill.
 
 Add a dated line to `.agent-orch/CHANGELOG.md`: "Project initialized with agent-orch."

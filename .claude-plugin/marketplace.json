@@ -9,7 +9,7 @@
       "name": "agent-orch",
       "source": "./",
       "description": "Portable project memory + development workflow for coding agents: auto-loads STATUS+RULES each session, enforces folder-level CONTEXT.md on edit, nudges state updates at turn end, scaffolds the whole system into any repo via guided discovery, and ships a tiered 6-phase workflow skill set covering every phase.",
-      "version": "1.3.1",
+      "version": "1.4.0",
       "author": {
         "name": "Rafay"
       },

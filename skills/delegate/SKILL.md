@@ -90,7 +90,7 @@ back to you, or you presenting a tier gate to the user. Two rules:
   the artifact. Demand this shape in the dispatch prompt's "expected return";
   produce it yourself at the user's tier gates.
 
-*Checkpoint vocabulary from the user's loop-me skill.*
+*Checkpoint vocabulary adapted from a personal workflow-design skill (loop-me).*
 
 ## Review scaling
 

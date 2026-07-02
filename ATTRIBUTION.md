@@ -13,7 +13,8 @@ Source: https://github.com/obra/superpowers (MIT License)
 Adapted in: `skills/brief/` (brainstorming), `skills/plan/` (writing-plans),
 `skills/debug/` (systematic-debugging and its reference techniques),
 `skills/verify-done/` (verification-before-completion),
-`skills/delegate/` (dispatching-parallel-agents, subagent-driven-development).
+`skills/delegate/` (dispatching-parallel-agents, subagent-driven-development),
+`skills/tdd/` (red-flag/rationalization tables).
 
 ## mattpocock-skills — Copyright (c) 2026 Matt Pocock
 
@@ -22,7 +23,8 @@ Source: https://github.com/mattpocock/skills (MIT License)
 Adapted in: `skills/brief/` (grilling), `skills/plan/` (prototype, to-issues),
 `skills/tdd/` (tdd, mocking/tests references), `skills/debug/`
 (diagnosing-bugs), `skills/design/` (codebase-design, domain-modeling,
-deepening reference), `skills/architecture/` (improve-codebase-architecture).
+deepening reference), `skills/architecture/` (improve-codebase-architecture),
+`skills/verify-done/` (review two-axis Spec check).
 
 ## gstack — Copyright (c) Garry Tan
 
@@ -37,7 +39,7 @@ Bun tooling) was not adapted.
 
 ## rampstack-skills — Copyright (c) 2026 RampStack Co.
 
-Source: the rampstack-skills plugin, v1.2.0 (MIT License)
+Source: https://github.com/rampstackco/claude-skills (rampstack-skills plugin, v1.2.0, MIT License)
 
 Adapted in: `skills/ship/` (launch-runbook, feature-launch-playbook),
 `skills/learn/` (after-action-report), `skills/verify-done/` (qa-testing tiers,

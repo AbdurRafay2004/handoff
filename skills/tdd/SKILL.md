@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Use when building any T3 feature or bugfix, or T2 work on money/auth/data paths — write the failing test before the implementation, one behavior at a time, through public interfaces.
+description: Use when building any T3 feature or bugfix, recommended for T2 on the affected path — write the failing test before the implementation, one behavior at a time, through public interfaces.
 ---
 
 # TDD

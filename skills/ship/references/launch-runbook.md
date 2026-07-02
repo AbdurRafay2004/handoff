@@ -29,7 +29,7 @@ before launch.** Untested rollback is hope, not procedure.
 ## 2. Pre-launch checklist
 
 - [ ] Verify phase complete: tests green on the merged state, `verify-done` passed
-- [ ] `security` skill review run on the diff (auth, secrets, injection, RLS/authz)
+- [ ] Built-in `/security-review` on the diff; the `security` skill for a full pre-launch audit (T3 launches) (auth, secrets, injection, RLS/authz)
 - [ ] Accessibility pass on changed UI (keyboard, contrast, labels)
 - [ ] Migration files reviewed line by line; down path exists
 - [ ] Backup/export of current production state (DB dump, previous deployment ID)

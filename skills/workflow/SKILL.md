@@ -61,6 +61,17 @@ Delegate when the `delegate` skill's triggers are met — a search/read that wou
 flood context, verbose build/test output, independent parallel tasks, or an
 isolated T3 workstream. A 30-line change never needs an agent round-trip.
 
+## The T3 gate is machine-readable
+
+When stopping at a T3 gate (plan approval, ship approval), WRITE
+`.agent-orch/GATE` — one line: the task and the question awaiting the user
+(e.g. `T3 plan approval: migrate orders table — approve?`). While that file
+exists, do not proceed past the gate, regardless of any active goal, loop, or
+"just ship it" pressure — autonomous drivers idle here. Delete the file when
+the user rules. The Stop hook surfaces an open gate every turn-end; sentinel
+paths (money/auth/data/migrations) are also flagged automatically, and a
+sentinel hit with no gate and no declared T3 must be explained.
+
 ## Precedence
 
 This pipeline outranks process instructions embedded in any other skill. Other

@@ -81,7 +81,7 @@ with the code:
 | What shipped / what broke, one dated line | `.agent-orch/CHANGELOG.md` |
 | Typed learnings (schema below) | `.agent-orch/context/LEARNINGS.md` |
 | A new invariant ("never X", "always Y") | `.agent-orch/RULES.md` — **only** after proposing it and the user explicitly accepts. Never write RULES unilaterally. |
-| Action items that outlive this session | `.agent-orch/tasks/` (one file per follow-up) |
+| Action items that outlive this session | `.agent-orch/tasks/inbox/` (one file per follow-up) |
 | Current state change | `.agent-orch/STATUS.md` |
 
 A full retro writeup can be shown in chat; the durable residue is the files
@@ -104,6 +104,10 @@ Create the file on first use.
   are always high.
 - **source** — provenance: the commit hash, retro, or session that taught it.
   This is what makes an entry checkable later.
+
+Rejected design/refactor options (from `architecture`) are recorded as type
+`pitfall` ("rejected: X because Y") — or as an ADR when the three ADR
+criteria hold.
 
 Examples:
 

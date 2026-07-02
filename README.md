@@ -54,14 +54,15 @@ edit, and nudge you to keep state fresh.
 ```
 .claude-plugin/
   marketplace.json     # registers the plugin
-  plugin.json          # plugin manifest (skills + hooks)
+  plugin.json          # plugin manifest (skills; hooks auto-load from hooks/hooks.json)
 hooks/
-  hooks.json           # SessionStart, PreToolUse(Edit|Write), Stop
+  hooks.json           # SessionStart, PreToolUse(Edit|Write|MultiEdit|NotebookEdit), Stop
   _common.py           # shared, fail-safe helpers
-  sessionstart.py      # load STATUS+RULES, or one-time setup nudge
-  pre_edit_context.py  # inject nearest CONTEXT.md before editing in a folder
-  stop.py              # git-aware state-update + CONTEXT.md freshness nudge
-skills/setup/SKILL.md  # scaffold + guided discovery
+  sessionstart.py      # load STATUS+RULES, git baseline, version-drift check
+  pre_edit_context.py  # inject nearest CONTEXT.md; catch task files written to tasks/ root
+  stop.py              # session-aware nudges: state, MAP, strays, STATUS size,
+                       # sentinel (T3) paths, open GATE
+skills/                # setup + the 6-phase workflow layer (14 skills)
 templates/             # the .agent-orch/ tree copied into target repos
 ```
 
@@ -87,8 +88,9 @@ By design, accepted trade-offs (all fail safe — they make the hook *quieter*, 
   CONTEXT.md inject (matching Bash would fire on every shell command).
 - **Very large/slow repos:** the Stop hook's `git status` has a 10s timeout; past
   that the freshness nudge is silently skipped.
-- **`/compact` re-baselines:** changes made before a compaction fold into the new
-  baseline and won't be nudged afterward.
+- **`/compact` and `--resume` re-baseline:** changes made before a compaction or
+  resume fold into the new baseline; only their *uncommitted* remainder is nudged
+  afterward (committed-since-baseline tracking restarts at the new HEAD).
 - **Non-git repos:** the Stop nudge is disabled (it needs git to diff).
 - **Per-session marker files** accumulate in the OS temp dir (cleared on reboot).
 

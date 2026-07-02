@@ -9,8 +9,8 @@ you're changing the model, not consuming it.)
 ## Where the model lives
 
 - **Glossary:** `.agent-orch/context/DOMAIN.md` if the repo uses agent-orch
-  project memory (create it when the first term is resolved); otherwise a
-  root-level `CONTEXT.md`. The glossary is a glossary and nothing else —
+  project memory (create it when the first term is resolved); otherwise
+  `docs/DOMAIN.md`. The glossary file is a glossary and nothing else —
   totally devoid of implementation details; not a spec, scratch pad, or
   decision log.
 - **Architectural decisions:** `docs/adr/NNNN-<slug>.md` — create the

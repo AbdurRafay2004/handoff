@@ -1,20 +1,16 @@
 # Skill Workflow — what to reach for, when
 
-Personal map for the post-v1.2.0 setup: agent-orch owns state AND process;
-everything else is a domain tool it calls. superpowers + mattpocock are
-**disabled** — their value was forked into agent-orch's skills (see
-ATTRIBUTION.md). Don't re-enable them; that reintroduces competing sequencers.
+How agent-orch skills compose: agent-orch owns state AND process. The workflow
+layer replaces any external process packs — one sequencer, no competing ones.
 
-## Three layers (updated)
+## Three layers
 
 - **State** — agent-orch memory (`.agent-orch/`: STATUS, RULES, CONTEXT.md,
   tasks, LEARNINGS). Automatic via hooks.
-- **Process** — agent-orch `workflow` + its technique skills. Mine, owned,
-  tier-driven. `workflow` alone decides sequencing and how much ceremony a
-  task gets.
-- **Domain / services** — frontend-design, cloudflare, supabase, dataviz,
-  rampstack (client-service library: SEO, brand, content, growth). Execution
-  of specific work; the pipeline calls them, they never run the pipeline.
+- **Process** — the `workflow` skill + its technique skills. Tier-driven;
+  `workflow` alone decides sequencing and how much ceremony a task gets.
+- **Domain / services** — stack- and domain-specific skills. They trigger on
+  their own; they are services, not pipeline.
 
 ## The one rule that replaces everything else
 
@@ -24,30 +20,25 @@ ATTRIBUTION.md). Don't re-enable them; that reintroduces competing sequencers.
 |---|---|---|
 | T1 | copy, styling, small edits | inline → typecheck+lint → done. No brief, no plan, no agents. |
 | T2 | normal features | short brief in chat → bullet plan → build → tests on affected path → review → evidence |
-| T3 | money, auth, user data, migrations | written spec I approve → plan I approve → TDD → security → full verify → runbook ship → retro |
+| T3 | money, auth, user data, migrations | written spec the user approves → plan the user approves → TDD → security → full verify → runbook ship → retro |
 
 If heavy process lands on a light task: say "this is T1". That ruling stands.
 
 ## The pipeline, phase by phase
 
-1. **Brief** — `agent-orch:brief`. Questions one at a time, code cited
-   `path:line`, my approval on the spec.
-2. **Plan** — `agent-orch:plan` (T2/T3). Premise challenged first; spikes for
-   unknowns; `agent-orch:design` when interfaces/seams are the question.
-3. **Build** — inline by default. `agent-orch:tdd` (T3 mandatory).
+1. **Brief** — `agent-orch:brief`. Questions one at a time, code cited `path:line`, the user's approval on the spec.
+2. **Plan** — `agent-orch:plan` (T2/T3); `agent-orch:design` when interfaces/seams are the question.
+3. **Build** — inline by default. `agent-orch:tdd` (T3 mandatory);
    `agent-orch:delegate` ONLY for context-flooding work or true parallelism.
-   `frontend-design` for UI. Bug → `agent-orch:debug`; 3+ failed fixes →
-   `agent-orch:architecture`.
-4. **Verify** — typecheck/lint/tests/build, then `/code-review` (T2+),
-   built-in `verify`/`run` to drive the app, `simplify` once green,
-   `agent-orch:browser-qa` for real-browser QA, `agent-orch:security` +
-   `/security-review` (T3). Gate: `agent-orch:verify-done` — evidence I can
-   judge, including the Spec check (is it what I asked?).
-5. **Ship** — `agent-orch:ship`. Branch → PR → merge → deploy (knows wrangler /
-   Vercel / Convex-before-frontend / Supabase migrations) → smoke check. T3:
-   launch runbook with rollback criteria set BEFORE deploying.
+   Bug → `agent-orch:debug`; 3+ failed fixes → `agent-orch:architecture`.
+4. **Verify** — typecheck/lint/tests/build, then code review (T2+),
+   `agent-orch:browser-qa`, `agent-orch:security` + `/security-review` (T3).
+   Gate: `agent-orch:verify-done` — evidence the user can judge, including
+   the Spec check (is it what was asked?).
+5. **Ship** — `agent-orch:ship`. Branch → PR → merge → deploy → smoke check.
+   T3: launch runbook with rollback criteria set BEFORE deploying.
 6. **Learn** — `agent-orch:learn` (T3/incidents only). CHANGELOG + LEARNINGS.md;
-   RULES.md only when I explicitly accept a new rule.
+   RULES.md only when the user explicitly accepts a new rule.
 
 ## When X happens, reach for Y
 
@@ -61,46 +52,29 @@ If heavy process lands on a light task: say "this is T1". That ruling stands.
 | QA the site in a browser | `agent-orch:browser-qa` |
 | Full security audit | `agent-orch:security` (diff-only: `/security-review`) |
 | Search/build would flood context | `agent-orch:delegate` |
-| New repo (mine or client) | `agent-orch:setup`, then `setup-pre-commit` + `git-guardrails-claude-code` (one-time hardening) |
+| New repo | `agent-orch:setup`, then `setup-pre-commit` + `git-guardrails-claude-code` (if installed; one-time hardening) |
 | Watch a deploy / recurring check | `/loop` (self-paced) — or `schedule` if unattended |
 | Grind the backlog / drive work to done | `/goal` with a measurable condition (tiers still gate T3) |
-| Nightly client-site QA | `schedule` + `agent-orch:browser-qa` |
-| Merge conflict mid-ship | `resolving-merge-conflicts` |
+| Merge conflict mid-ship | `resolving-merge-conflicts` (if installed) |
 
 ## Time operators — goal, loop, schedule (built-in)
 
-Not phases — they run phases *across time*. Pick by the question:
+Not phases — they run phases *across time*:
 
-- **`/goal <condition>`** — *keep working until WHAT?* Persistent objective,
-  auto-checked each turn by a fast model, clears when met. Best:
-  `/goal tasks/now/ is empty` (backlog grinder), `/goal all tests pass and
-  lint is clean`. Add a bound: "…or stop after 20 turns".
-- **`/loop`** — *re-run WHEN, while I'm at the machine?* Fixed interval
-  (`/loop 5m check the deploy`) or self-paced (prompt only — usually cheaper,
-  can Monitor instead of poll). Session-scoped; dies with a new conversation.
-- **`schedule`** — *run WHEN, while I'm gone?* Cloud cron, machine off, 1h
-  minimum. Best: nightly `browser-qa` against client production sites.
+- **`/goal <condition>`** — *keep working until WHAT?* Persistent objective, auto-checked, clears when met. Add a bound ("…or stop after 20 turns").
+- **`/loop`** — *re-run WHEN, while attended?* Interval or self-paced; session-scoped.
+- **`schedule`** — *run WHEN, unattended?* Cloud cron, 1h minimum.
 
-**Tier guardrail:** an autonomous goal/loop may drive T1/T2 to completion, but
-a T3 approval gate ALWAYS outranks the goal — it stops and waits for me.
+**Tier guardrail:** an autonomous goal/loop may drive T1/T2 to completion, but a
+T3 approval gate ALWAYS outranks the goal — it stops and waits for the user.
 Never let "empty the backlog" self-approve money/auth/data work.
 
-## Occasional / opt-in
+## Rules of thumb
 
-- **Client marketing/SEO/brand/content work** → rampstack families, per
-  engagement. They're services, not pipeline.
-- **Post-launch marketing clip** → `social-showcase-video`.
-- **Writing** → writing-fragments / writing-beats / writing-shape / edit-article.
-
-## Rules of thumb (updated)
-
-- **One sequencer.** `workflow` owns order and ceremony; every other skill
-  contributes technique. If a skill starts running its own workflow, that's a
-  bug in the skill — fix the skill, don't obey it.
-- **Evidence over claims.** I judge demos, test output, and preview URLs —
-  never "the code looks right".
+- **One sequencer.** `workflow` owns order and ceremony; other skills contribute
+  technique. A skill running its own workflow is a bug in the skill.
+- **Evidence over claims.** The user judges demos, test output, and preview
+  URLs — never "the code looks right".
 - **One of each spine:** one task system (`.agent-orch/tasks/`), one meaning
   for `CONTEXT.md`, one learnings file (`.agent-orch/context/LEARNINGS.md`).
-- **Keep STATUS.md ≤ 25 lines.** It's injected every session; drift here is
-  the single biggest measured token leak (502 lines ≈ 12k tokens/session on
-  Retail-OS before pruning).
+- **Keep STATUS.md ≤ 25 lines** — it is injected every session; drift is a token tax.

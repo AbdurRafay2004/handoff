@@ -24,6 +24,7 @@ off, read `RULES.md` and `STATUS.md` first.
 - `context/PRODUCT.md` — product goals, users, workflows, domain terms
 - `context/TECH_STACK.md` — commands, env vars, setup, deploy, verification
 - `context/LEARNINGS.md` — recorded patterns/pitfalls from past sessions
+  (created by the `learn` skill on first use)
 - `<dir>/CONTEXT.md` — local architecture; read before editing inside a folder
   that has one *(the PreToolUse hook injects it automatically on first edit)*
 - `CHANGELOG.md` — when recent history matters
@@ -48,7 +49,7 @@ commit (if you already committed and haven't pushed, amend).
 6. `context/PRODUCT.md` — only if scope, users, workflows, or domain language changed
 7. `context/TECH_STACK.md` — only if stack, commands, env vars, or deploy changed
 8. `context/LEARNINGS.md` — a typed one-line entry when a session taught
-   something durable (see the `learn` skill)
+   something durable (see the `learn` skill; it creates the file on first use)
 9. `<dir>/CONTEXT.md` — create or update when a folder gains local architecture
    or conventions future sessions should read before editing there
 10. `.agent-orch/skills/<name>/SKILL.md` — create when you established a

@@ -64,3 +64,5 @@ account for most "worked locally, broke in production" incidents.
   secrets a client-exposing env-var prefix.
 - Sanitize user input before it reaches queries, file paths, or HTML.
 - Set `Secure`, `HttpOnly`, and `SameSite` on session cookies.
+
+*Adapted from rampstack-skills (MIT, © 2026 RampStack Co.); see ATTRIBUTION.md.*

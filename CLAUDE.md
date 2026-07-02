@@ -36,19 +36,27 @@ declare a `hooks` field; see commit 514a6dc). Each hook is a thin `python3` entr
 imports shared logic from `hooks/_common.py`:
 
 - **`sessionstart.py`** (SessionStart) — if the target repo has `.agent-orch/`, injects
-  `STATUS.md` + `RULES.md` in full plus an on-demand pointer, and captures a git baseline
-  for the session. If not, emits a **one-time** "run setup" tip per repo (marker file in
-  `~/.cache/agent-orch/`) and stays silent forever after.
+  `STATUS.md` + `RULES.md` in full plus an on-demand pointer, captures a git baseline
+  for the session (**HEAD sha + dirty paths with status codes** — so the Stop hook sees
+  committed work too), and checks `.agent-orch/VERSION` against the plugin version
+  (template-drift nag; missing stamp nags once per repo). If no `.agent-orch/`, emits a
+  **one-time** "run setup" tip per repo (marker file in `~/.cache/agent-orch/`) and stays
+  silent forever after.
 - **`pre_edit_context.py`** (PreToolUse: Edit/Write/MultiEdit/NotebookEdit) — walks up
   from the file being edited to find the nearest `CONTEXT.md` and injects it once per
   session; also corrects task files about to be written to the `tasks/` ROOT (they
   belong in `inbox|now|done`). Injects `additionalContext` **only** — never a
   `permissionDecision` — so it can't silently auto-approve edits.
-- **`stop.py`** (Stop) — nudges to update `STATUS.md` / `CHANGELOG.md` / `MAP.md`
-  (only when files were added/removed/renamed) / a folder's `CONTEXT.md`, and flags
-  task files stranded in the `tasks/` root, when the session made new repo changes
-  but didn't update durable state. The nudge also instructs that state updates ride
-  in the SAME commit as the code (amend if unpushed) — no trailing docs-only commits.
+- **`stop.py`** (Stop) — nudges when the session made new repo changes (**committed or
+  uncommitted** — session-changed = commits since baseline HEAD + dirty paths whose
+  code changed) but didn't update durable state: `STATUS.md` / `CHANGELOG.md` /
+  `MAP.md` (structural changes only) / a folder's `CONTEXT.md`. Also flags: task files
+  stranded in the `tasks/` root (shown once per session per stray-set), `STATUS.md`
+  over 40 lines, **sentinel paths** (auth/migration/billing/… — configurable via
+  `.agent-orch/SENTINELS`, forces the T3 question into the transcript), and an open
+  `.agent-orch/GATE` (machine-readable T3 stall). The nudge instructs that state
+  updates ride in the SAME commit as the code (amend only if unpushed AND the last
+  commit is this session's own work).
 
 The push/pull principle behind all of it: always-relevant state (STATUS+RULES) is
 **pushed** every session; everything else (`BOOT.md`, `MAP.md`, `context/*`, `tasks/`,
@@ -86,7 +94,8 @@ echo '{"cwd":"/abs/path/to/target-repo","session_id":"t1"}' | python3 hooks/sess
 # PreToolUse — nearest CONTEXT.md for a file about to be edited
 echo '{"cwd":"/abs/path/to/target-repo","session_id":"t1","tool_input":{"file_path":"src/foo.ts"}}' | python3 hooks/pre_edit_context.py
 
-# Stop — run twice; a second identical run should stay silent (signature cooldown)
+# Stop — needs a baseline first (run sessionstart with the same session_id, then make
+# a change); after that, a second identical run stays silent (signature cooldown).
 echo '{"cwd":"/abs/path/to/target-repo","session_id":"t1","stop_hook_active":false}' | python3 hooks/stop.py
 ```
 
@@ -94,7 +103,8 @@ No output + exit 0 is the common (correct) result — most invocations are inten
 silent. Session state (git baseline, nudge signature, per-CONTEXT.md dedup markers) lives
 in `<tmp>/agent-orch-session-<hash>/`; delete that dir to reset a "session" between tests.
 
-Keep hooks **stdlib-only** — no third-party imports. `templates/` is markdown only.
+Keep hooks **stdlib-only** — no third-party imports. `templates/` is markdown plus
+`.gitkeep` files only.
 
 ## The setup skill
 
@@ -108,8 +118,10 @@ the plugin). It must refuse to overwrite an existing `.agent-orch/` (offer refre
 ## Releasing
 
 `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` both carry the version —
-**bump both together** (they are currently `1.0.3`). Commit subjects follow
-`type: summary (vX.Y.Z)`.
+**bump both together** (never hardcode the current number in docs; check the manifests).
+Release-bump commit subjects follow `type: summary (vX.Y.Z)`; non-release commits omit
+the version suffix. The marketplace registration reads GitHub, not the local clone —
+a release is only live after `git push`.
 
 ## Further reading
 

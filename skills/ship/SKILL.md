@@ -42,6 +42,8 @@ not re-litigate verification — but it does re-run it when code changes (below)
   be reverted independently, note that in the commit body — it changes the
   rollback plan.
 - **Never force push.** Never rewrite pushed history. Plain `git push` only.
+  Sole exception: scrubbing a leaked secret from history (see `security`), with
+  the user's explicit approval — rotate the secret first.
 
 ## PR / merge discipline
 
@@ -199,8 +201,9 @@ non-negotiables:
 
 The first time you ship from a repo that has no pre-commit hooks or git
 guardrails, run the `setup-pre-commit` skill (format/typecheck/test on commit)
-and the `git-guardrails` skill (blocks destructive git commands) once. Every
-later ship in that repo inherits the safety net.
+and the `git-guardrails-claude-code` skill (blocks destructive git commands)
+once (user-installed skills — skip if unavailable). Every later ship in that
+repo inherits the safety net.
 
 ---
 

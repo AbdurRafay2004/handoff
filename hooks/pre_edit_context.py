@@ -54,6 +54,11 @@ def nearest_context_md(file_path, root):
                 return None
         except ValueError:  # different drives (Windows) -> not in project
             return None
+        # A path equal to the root itself has no parent inside the project —
+        # without this guard the walk would start at the root's PARENT and
+        # read a CONTEXT.md from outside the repo.
+        if os.path.normpath(fp) == os.path.normpath(root_abs):
+            return None
         d = os.path.dirname(fp)
         # Stay within the project root.
         while True:
@@ -78,9 +83,16 @@ def main():
     if not file_path:
         sys.exit(0)
 
-    # Task files belong in inbox/now/done — catch a root-level write before it lands.
+    # Task files belong in inbox/now/done — catch a root-level write before it
+    # lands. Corrected at most once per file per session (repeat writes to the
+    # same stray already got the message).
     stray = misfiled_task_write(file_path, root)
     if stray:
+        sdir = session_marker_dir(payload.get("session_id"))
+        tmarker = os.path.join(sdir, "taskroot-" + _short(stray))
+        if marker_seen(tmarker):
+            sys.exit(0)
+        marker_set(tmarker)
         emit(
             "PreToolUse",
             "agent-orch: `{}` is being written to `.agent-orch/tasks/` ROOT. Task "
