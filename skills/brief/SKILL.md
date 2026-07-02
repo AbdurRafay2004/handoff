@@ -1,0 +1,89 @@
+---
+name: brief
+description: Use when starting any new feature or product request, before writing a plan or code — turns an idea into a short approved spec by surfacing the decisions that will hurt later. Depth scales with risk tier.
+---
+
+# Brief
+
+Part of the **Brief** phase — see the `workflow` skill for tiers and sequencing.
+
+Turn an idea into a clear, approved spec through collaborative dialogue. The
+user speaks as PM/architect (what and why); you interrogate as the senior
+engineer until the 2–3 decisions that would hurt later are settled — scope,
+edge cases, failure paths — then STOP. Don't design the universe.
+
+## Tier scaling
+
+- **T1 (trivial):** skip this skill entirely. Just do the task.
+- **T2 (standard):** a few targeted questions in chat, a 3–6 line spec summary,
+  user says "yes, that's what I want." No document needed.
+- **T3 (risky — money/auth/data/migrations):** full interrogation, written spec,
+  explicit approval before planning.
+
+## The process
+
+**Understand the context first.** Check current project state — files, docs,
+recent commits, `.agent-orch/` state if present. If a question can be answered
+by exploring the codebase, explore the codebase instead of asking.
+
+**Assess scope before refining details.** If the request describes multiple
+independent subsystems ("build a platform with chat, billing, and analytics"),
+flag it immediately and help decompose into sub-projects: what are the
+independent pieces, how do they relate, what order? Then brief the first
+sub-project. Each sub-project gets its own brief → plan → build cycle.
+
+**Ask questions one at a time.** Multiple questions at once are bewildering.
+Prefer multiple choice when possible; open-ended is fine too. For each question,
+provide your recommended answer — the user corrects a recommendation faster
+than they produce an answer from scratch. Focus on purpose, constraints,
+success criteria, and what happens when things fail (empty states, bad input,
+the payment that doesn't go through).
+
+**T3 depth — interrogate relentlessly.** Walk down each branch of the design
+tree, resolving dependencies between decisions one by one, until you reach
+shared understanding. Stress-test the plan's premises, not just its details.
+
+**Propose 2–3 approaches** with trade-offs, in plain product language. Lead
+with your recommendation and why. YAGNI ruthlessly — strike features the goal
+doesn't need.
+
+**Present the design, scaled to complexity** — a few sentences for simple
+work, sections for nuanced work (architecture, components, data flow, error
+handling, testing). Ask after each section whether it looks right. Go back and
+clarify when something doesn't make sense.
+
+**Design for isolation and clarity.** Break the system into units with one
+clear purpose each, communicating through well-defined interfaces. For each
+unit: what does it do, how do you use it, what does it depend on? If you can't
+change a unit's internals without breaking consumers, the boundaries need work.
+Smaller, well-bounded units are also easier to build reliably — a file that
+grows large is usually doing too much.
+
+**In existing codebases:** follow established patterns. Where existing code has
+problems that affect this work, include targeted improvements in the design —
+but don't propose unrelated refactoring.
+
+## Writing the spec (T3)
+
+Save to `docs/specs/YYYY-MM-DD-<topic>.md` (user preferences override) and
+self-review it with fresh eyes:
+
+1. **Placeholder scan** — any "TBD"/"TODO"/vague requirements? Fix them.
+2. **Internal consistency** — do sections contradict each other?
+3. **Scope check** — focused enough for a single plan, or needs decomposition?
+4. **Ambiguity check** — could any requirement be read two ways? Pick one,
+   make it explicit.
+
+Fix issues inline, then ask the user to review the spec before proceeding.
+Only move to the `plan` skill once they approve.
+
+## Key principles
+
+- One question at a time; multiple choice preferred; recommendation attached.
+- Explore the codebase instead of asking what it can answer.
+- YAGNI ruthlessly. Explore 2–3 alternatives before settling.
+- Incremental validation — approval per section, not one big reveal.
+- Surface failure paths early; they are where specs go wrong.
+- Stop when the load-bearing decisions are settled.
+
+*Adapted from superpowers (MIT, © 2025 Jesse Vincent) and mattpocock-skills (MIT, © 2026 Matt Pocock); see ATTRIBUTION.md.*

@@ -92,13 +92,29 @@ By design, accepted trade-offs (all fail safe — they make the hook *quieter*, 
 - **Non-git repos:** the Stop nudge is disabled (it needs git to diff).
 - **Per-session marker files** accumulate in the OS temp dir (cleared on reboot).
 
+## The workflow layer (v1.1.0+)
+
+Alongside project memory, the plugin ships an owned development pipeline:
+`skills/workflow` defines six phases (Brief → Plan → Build → Verify → Ship →
+Learn) with **risk tiers** (T1 trivial / T2 standard / T3 risky) that decide how
+much process a task gets — so a 2-line edit never pays for a migration's
+ceremony. Seven companion skills carry the engineering technique for each phase:
+`brief`, `plan`, `tdd`, `debug`, `verify-done`, `design`, and `delegate`
+(subagents only when context pressure or true parallelism warrants them).
+
+These skills are adapted from MIT-licensed work by Jesse Vincent (superpowers)
+and Matt Pocock (mattpocock-skills) — see `ATTRIBUTION.md` — with one deliberate
+change: all cross-pack orchestration was stripped, so sequencing lives in ONE
+place (`workflow`), and the other skills contribute technique, not process.
+If you run this plugin's workflow layer, disable the original packs to avoid
+double-loading competing instructions.
+
 ## Layering with other skills
 
-agent-orch is the **state/context** layer. It composes with — and does not
-replace — process skills (planning, TDD, debugging) and domain skills. Its
-`tasks/` is your durable **backlog**; pair it with an implementation-plan skill
-for *executing* a single item, and an issue pipeline only for slicing a big
-feature into a queue.
+agent-orch is the **state/context + workflow** layer. It composes with — and
+does not replace — domain skills (frontend design, Supabase, etc.). Its
+`tasks/` is your durable **backlog**; the `workflow` skill owns how a single
+item gets executed.
 
 See [docs/SKILL-WORKFLOW.md](docs/SKILL-WORKFLOW.md) for a "what to reach for,
 when" map across agent-orch, superpowers, mattpocock, frontend-design, and rampstack.
