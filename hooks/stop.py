@@ -20,9 +20,25 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import (  # noqa: E402
     read_stdin_json, project_root, has_agent_orch, emit, AGENT_DIR,
-    git_status_paths, load_baseline, save_baseline,
+    git_status_codes, load_baseline, save_baseline,
     last_nudge_signature, set_nudge_signature, signature,
 )
+
+TASKS_ROOT_ALLOWED = ("WORKFLOW.md", "TEMPLATE.md")
+
+
+def misfiled_tasks(root):
+    """Task .md files sitting in tasks/ root instead of inbox|now|done; [] on error."""
+    found = []
+    try:
+        tasks_dir = os.path.join(root, AGENT_DIR, "tasks")
+        for name in sorted(os.listdir(tasks_dir)):
+            if (name.endswith(".md") and name not in TASKS_ROOT_ALLOWED
+                    and os.path.isfile(os.path.join(tasks_dir, name))):
+                found.append(name)
+    except Exception:
+        pass
+    return found
 
 
 def nearest_context_rel(rel_path, root):
@@ -48,10 +64,10 @@ def main():
     if not has_agent_orch(root):
         sys.exit(0)
 
-    current = git_status_paths(root)
-    if current is None:  # not a git repo / git error -> freshness nudge disabled
+    codes = git_status_codes(root)
+    if codes is None:  # not a git repo / git error -> freshness nudge disabled
         sys.exit(0)
-    current_set = set(current)
+    current_set = set(codes)
     session_id = payload.get("session_id")
 
     # Loop-breaker 2: compare to the session baseline. If SessionStart never
@@ -78,6 +94,24 @@ def main():
         if changelog_md not in current_set:
             notes.append("CHANGELOG.md was not updated (add an entry if the change is meaningful)")
 
+    # MAP.md: only relevant when the session's new work added/removed/renamed
+    # files (structural change), not on ordinary edits.
+    map_md = os.path.normpath(os.path.join(AGENT_DIR, "MAP.md"))
+    structural = [
+        p for p in new_work
+        if any(c in codes.get(p, "") for c in ("?", "A", "D", "R"))
+    ]
+    if structural and map_md not in current_set:
+        notes.append("files were added/removed/renamed this session but MAP.md was "
+                     "not updated (update it only if important files changed)")
+
+    # Task files parked in tasks/ root instead of inbox|now|done.
+    strays = misfiled_tasks(root)
+    if strays:
+        shown = ", ".join(strays[:5]) + (" …" if len(strays) > 5 else "")
+        notes.append("task file(s) sitting in tasks/ root — move into inbox/, now/, "
+                     "or done/ with matching frontmatter status: " + shown)
+
     stale = set()
     for p in new_work:
         ctx = nearest_context_rel(p, root)
@@ -98,6 +132,9 @@ def main():
     msg += ["  - " + n for n in notes]
     msg += ["  - {} may need updating for the folder you edited".format(c) for c in sorted(stale)]
     msg.append("Update durable state before wrapping up (see .agent-orch/BOOT.md). "
+               "State updates ride in the SAME commit as the code they describe — "
+               "if you already committed and haven't pushed, `git commit --amend` "
+               "the doc updates in rather than adding a docs-only commit. "
                "If no update is warranted, you can ignore this — it won't repeat for the same changes.")
     emit("Stop", "\n".join(msg))
 

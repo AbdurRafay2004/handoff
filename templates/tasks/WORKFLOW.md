@@ -11,6 +11,10 @@ the "what to do", not the "how".
 - `now/` — small active priority set.
 - `done/` — completed or intentionally closed tasks.
 
+**Placement is not optional:** every task file lives inside one of those three
+folders. The `tasks/` root contains ONLY this file and `TEMPLATE.md` — never
+write a task file next to them. (The hooks flag root-level task files.)
+
 ## Task File Format
 One markdown file per task with YAML frontmatter. See `TEMPLATE.md`.
 

@@ -16,8 +16,11 @@ These ship with agent-orch and apply regardless of stack.
 6. Ask before turning an unclear preference into a permanent rule.
 
 ### State
-7. Update `STATUS.md` and `CHANGELOG.md` whenever code or configuration changed.
-8. Use `tasks/` for durable follow-ups, not chat history.
+7. Update `STATUS.md` and `CHANGELOG.md` whenever code or configuration changed —
+   BEFORE committing, so state rides in the same commit as the code it describes.
+   Never add a trailing docs-only commit; amend if not yet pushed.
+8. Use `tasks/` for durable follow-ups, not chat history. Task files live in
+   `tasks/inbox/`, `tasks/now/`, or `tasks/done/` — never in the `tasks/` root.
 
 ### Safety
 9. Never hardcode secrets, credentials, or environment-specific values.

@@ -14,8 +14,27 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import (  # noqa: E402
     read_stdin_json, project_root, read_file, session_marker_dir,
-    marker_seen, marker_set, emit, _short,
+    marker_seen, marker_set, emit, _short, AGENT_DIR,
 )
+
+TASKS_ROOT_ALLOWED = ("WORKFLOW.md", "TEMPLATE.md")
+
+
+def misfiled_task_write(file_path, root):
+    """Name of a task .md about to be written to tasks/ ROOT (not a subfolder), or None."""
+    try:
+        root_abs = os.path.abspath(root)
+        fp = file_path if os.path.isabs(file_path) else os.path.join(root_abs, file_path)
+        fp = os.path.abspath(fp)
+        tasks_root = os.path.normpath(os.path.join(root_abs, AGENT_DIR, "tasks"))
+        if os.path.normpath(os.path.dirname(fp)) != tasks_root:
+            return None
+        name = os.path.basename(fp)
+        if name.endswith(".md") and name not in TASKS_ROOT_ALLOWED:
+            return name
+    except Exception:
+        return None
+    return None
 
 
 def nearest_context_md(file_path, root):
@@ -58,6 +77,19 @@ def main():
     file_path = tool_input.get("file_path") or tool_input.get("notebook_path")
     if not file_path:
         sys.exit(0)
+
+    # Task files belong in inbox/now/done — catch a root-level write before it lands.
+    stray = misfiled_task_write(file_path, root)
+    if stray:
+        emit(
+            "PreToolUse",
+            "agent-orch: `{}` is being written to `.agent-orch/tasks/` ROOT. Task "
+            "files live in a status folder — write it to `tasks/inbox/` (new), "
+            "`tasks/now/` (active), or `tasks/done/` (closed) instead, with the "
+            "frontmatter `status` matching the folder. Only WORKFLOW.md and "
+            "TEMPLATE.md live at the tasks/ root.".format(stray),
+        )
+        return
 
     ctx_path = nearest_context_md(file_path, root)
     if not ctx_path:

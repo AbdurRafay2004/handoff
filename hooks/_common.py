@@ -86,8 +86,8 @@ def marker_set(path):
         return False
 
 
-def git_status_paths(root):
-    """Repo-relative, normalized paths of all changed/untracked files; None on error.
+def git_status_codes(root):
+    """Dict of repo-relative normalized path -> porcelain status code; None on error.
 
     -uall lists untracked files individually so new directories aren't collapsed
     to one entry (which would hide nested CONTEXT.md folders and new files).
@@ -101,15 +101,22 @@ def git_status_paths(root):
             return None
     except Exception:
         return None
-    paths = []
+    codes = {}
     for line in out.stdout.splitlines():
         if len(line) < 4:
             continue
+        code = line[:2]
         entry = line[3:]
         if " -> " in entry:  # rename: "old -> new"
             entry = entry.split(" -> ", 1)[1]
-        paths.append(os.path.normpath(entry.strip().strip('"')))
-    return paths
+        codes[os.path.normpath(entry.strip().strip('"'))] = code
+    return codes
+
+
+def git_status_paths(root):
+    """Repo-relative, normalized paths of all changed/untracked files; None on error."""
+    codes = git_status_codes(root)
+    return None if codes is None else list(codes)
 
 
 def _session_file(session_id, name):

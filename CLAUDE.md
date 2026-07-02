@@ -41,10 +41,14 @@ imports shared logic from `hooks/_common.py`:
   `~/.cache/agent-orch/`) and stays silent forever after.
 - **`pre_edit_context.py`** (PreToolUse: Edit/Write/MultiEdit/NotebookEdit) — walks up
   from the file being edited to find the nearest `CONTEXT.md` and injects it once per
-  session. Injects `additionalContext` **only** — never a `permissionDecision` — so it
-  can't silently auto-approve edits.
-- **`stop.py`** (Stop) — nudges to update `STATUS.md` / `CHANGELOG.md` / a folder's
-  `CONTEXT.md` when the session made new repo changes but didn't update durable state.
+  session; also corrects task files about to be written to the `tasks/` ROOT (they
+  belong in `inbox|now|done`). Injects `additionalContext` **only** — never a
+  `permissionDecision` — so it can't silently auto-approve edits.
+- **`stop.py`** (Stop) — nudges to update `STATUS.md` / `CHANGELOG.md` / `MAP.md`
+  (only when files were added/removed/renamed) / a folder's `CONTEXT.md`, and flags
+  task files stranded in the `tasks/` root, when the session made new repo changes
+  but didn't update durable state. The nudge also instructs that state updates ride
+  in the SAME commit as the code (amend if unpushed) — no trailing docs-only commits.
 
 The push/pull principle behind all of it: always-relevant state (STATUS+RULES) is
 **pushed** every session; everything else (`BOOT.md`, `MAP.md`, `context/*`, `tasks/`,
