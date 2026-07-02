@@ -21,6 +21,16 @@ tasks. DRY. YAGNI. Test-first where the tier demands it. Frequent commits.
   stated in plain product language. Save to `docs/plans/YYYY-MM-DD-<feature>.md`
   (user preferences override).
 
+## Step 0 — challenge the premise
+
+Before planning the how, spend a paragraph on the whether. Is this the right
+problem at all, or a proxy for a simpler outcome — and what actually breaks if
+we do nothing? Does existing code already solve part of it? Map each
+sub-problem to what exists before planning anything parallel. Then name the
+**10x version** of the ask — what would deliver 10x the value for 2x the
+effort? Usually you still plan the ask, but naming the bigger and the
+do-nothing versions lets the user pick scope deliberately, not by default.
+
 ## Scope check
 
 If the spec covers multiple independent subsystems, it should have been
@@ -50,6 +60,21 @@ independently testable deliverable.
 **Each step is one action (2–5 minutes):** write the failing test — run it and
 watch it fail — implement the minimal code — run tests and watch them pass —
 commit.
+
+**Every task is a vertical slice** — a thin, complete path through all the
+layers it touches (schema, API, UI, tests), demoable or verifiable on its own;
+never a horizontal pass over one layer. Refactor steps ride along as tiny
+commits, each leaving the codebase working.
+
+## Spikes
+
+When a design question blocks the plan ("does this state model hold up?"),
+answer it with a throwaway prototype, not debate. Rules: one command to run;
+no persistence — state lives in memory; skip all polish (no tests, no error
+handling, no abstractions); surface the full state after every action. A spike
+answers exactly one question. Capture the answer somewhere durable — the plan
+itself, a commit message — then DELETE the prototype. The answer is the only
+keeper.
 
 ## Plan document structure (T3)
 
@@ -114,4 +139,4 @@ Execution mode is decided by the `workflow` tier, not by this skill: inline in
 this session by default; subagents only when the `delegate` triggers apply.
 For T3, present the plan to the user and get approval before building.
 
-*Adapted from superpowers (MIT, © 2025 Jesse Vincent); see ATTRIBUTION.md.*
+*Adapted from superpowers (MIT, © 2025 Jesse Vincent), gstack (MIT, © Garry Tan), and mattpocock-skills (MIT, © 2026 Matt Pocock); see ATTRIBUTION.md.*

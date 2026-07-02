@@ -10,12 +10,13 @@ workflow layer** that other repos install. There is no build step, no dependency
 tree, and no test framework — the deliverable is Python hook scripts (stdlib
 only), a skill set, and a template tree.
 
-The skill set (v1.1.0+): `setup` (scaffolding), `workflow` (the 6-phase,
-risk-tiered pipeline — the constitution that owns sequencing), and seven
-technique skills (`brief`, `plan`, `tdd`, `debug`, `verify-done`, `design`,
-`delegate`) forked from MIT-licensed superpowers/mattpocock-skills with all
-cross-pack orchestration stripped (see `ATTRIBUTION.md`). When editing a
-technique skill, never reintroduce pack-style enforcement preambles or
+The skill set (v1.2.0+): `setup` (scaffolding), `workflow` (the 6-phase,
+risk-tiered pipeline — the constitution that owns sequencing), and twelve
+technique skills (`brief`, `plan`, `design`, `tdd`, `debug`, `architecture`,
+`delegate`, `verify-done`, `security`, `browser-qa`, `ship`, `learn`) forked
+from MIT-licensed superpowers, mattpocock-skills, gstack, and rampstack-skills
+with all cross-pack orchestration stripped (see `ATTRIBUTION.md`). When editing
+a technique skill, never reintroduce pack-style enforcement preambles or
 cross-skill process handoffs — `workflow` alone decides sequencing and tiering.
 
 Do not confuse the two layers:

@@ -98,12 +98,14 @@ Alongside project memory, the plugin ships an owned development pipeline:
 `skills/workflow` defines six phases (Brief → Plan → Build → Verify → Ship →
 Learn) with **risk tiers** (T1 trivial / T2 standard / T3 risky) that decide how
 much process a task gets — so a 2-line edit never pays for a migration's
-ceremony. Seven companion skills carry the engineering technique for each phase:
-`brief`, `plan`, `tdd`, `debug`, `verify-done`, `design`, and `delegate`
-(subagents only when context pressure or true parallelism warrants them).
+ceremony. Twelve companion skills carry the engineering technique across the
+phases: `brief`, `plan`, `design`, `tdd`, `debug`, `architecture`, `delegate`
+(subagents only when context pressure or true parallelism warrants them),
+`verify-done`, `security`, `browser-qa`, `ship`, and `learn`.
 
-These skills are adapted from MIT-licensed work by Jesse Vincent (superpowers)
-and Matt Pocock (mattpocock-skills) — see `ATTRIBUTION.md` — with one deliberate
+These skills are adapted from MIT-licensed work by Jesse Vincent (superpowers),
+Matt Pocock (mattpocock-skills), Garry Tan (gstack), and RampStack Co.
+(rampstack-skills) — see `ATTRIBUTION.md` — with one deliberate
 change: all cross-pack orchestration was stripped, so sequencing lives in ONE
 place (`workflow`), and the other skills contribute technique, not process.
 If you run this plugin's workflow layer, disable the original packs to avoid

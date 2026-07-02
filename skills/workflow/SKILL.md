@@ -35,18 +35,24 @@ it in one line ("this is T1") and that ruling stands.
    Gate (T2/T3): user approves the plan.
 3. **Build** — write the code. Inline by default; delegate to subagents only per
    the `delegate` skill's triggers (context pressure or true parallelism), never
-   as ceremony. T3 builds test-first (skill: `tdd`). Bugs found along the way go
-   through `debug`, not guess-and-patch.
+   as ceremony. T3 builds test-first (skill: `tdd`). Run single test files often;
+   the full suite once at the end. Bugs found along the way go through `debug`,
+   not guess-and-patch — and if 3+ fixes fail, escalate to `architecture`.
 4. **Verify** — non-negotiable, scaled by tier. Mechanical first: typecheck,
-   lint, tests, build. Then T2+: code review pass; run the app and exercise the
-   change. T3: security review, end-to-end verification. Before claiming done:
-   skill `verify-done` — evidence before assertions, always.
+   lint, tests, build. Then T2+: a review pass (built-in `/code-review`); run
+   the app and exercise the change (built-in `verify`/`run` skills); optionally
+   `simplify` once green. T3: security gate (built-in `/security-review` for the
+   diff, the `security` skill for a full audit) and end-to-end verification.
+   Before claiming done: skill `verify-done` — evidence before assertions,
+   always, including the Spec check (does the diff match the brief?).
    Gate: user judges the evidence (screenshots, test summary, preview URL) — the
    pipeline judged the code.
-5. **Ship** — branch → PR → deploy → smoke-check the live result. Never
-   `git add -A`; stage only what you changed. Every commit revertible.
-6. **Learn** — update durable state (STATUS/CHANGELOG via agent-orch), plus one
-   line: what did we learn / what nearly went wrong.
+5. **Ship** — skill: `ship`. Branch → PR → merge → deploy → smoke-check the
+   live result, tier-scaled up to a full launch runbook. Never `git add -A`;
+   stage only what you changed. Every commit revertible.
+6. **Learn** — skill: `learn` (T3 and incidents; T1/T2 need only a CHANGELOG
+   line). Update durable state (STATUS/CHANGELOG via agent-orch), record
+   learnings, plus one line: what would have prevented this?
 
 ## Delegation (subagents)
 

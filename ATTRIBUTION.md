@@ -19,9 +19,30 @@ Adapted in: `skills/brief/` (brainstorming), `skills/plan/` (writing-plans),
 
 Source: https://github.com/mattpocock/skills (MIT License)
 
-Adapted in: `skills/brief/` (grilling), `skills/tdd/` (tdd),
-`skills/debug/` (diagnosing-bugs), `skills/design/` (codebase-design,
-domain-modeling).
+Adapted in: `skills/brief/` (grilling), `skills/plan/` (prototype, to-issues),
+`skills/tdd/` (tdd, mocking/tests references), `skills/debug/`
+(diagnosing-bugs), `skills/design/` (codebase-design, domain-modeling,
+deepening reference), `skills/architecture/` (improve-codebase-architecture).
+
+## gstack — Copyright (c) Garry Tan
+
+Source: https://github.com/garrytan/gstack (MIT License)
+
+Adapted in: `skills/ship/` (ship, land-and-deploy, canary policy),
+`skills/security/` (cso and its audit phases), `skills/learn/` (retro, learn
+schema), `skills/browser-qa/` (qa-only methodology), plus merge-ins in
+`skills/brief/` (spec), `skills/plan/` (plan-ceo-review), and `skills/debug/`
+(investigate). gstack's runtime harness (browser daemon, GBrain, telemetry,
+Bun tooling) was not adapted.
+
+## rampstack-skills — Copyright (c) 2026 RampStack Co.
+
+Source: the rampstack-skills plugin, v1.2.0 (MIT License)
+
+Adapted in: `skills/ship/` (launch-runbook, feature-launch-playbook),
+`skills/learn/` (after-action-report), `skills/verify-done/` (qa-testing tiers,
+code-review-web bug patterns), plus merge-ins in `skills/brief/`
+(pm-spec-writing) and `skills/design/` (frontend-component-build).
 
 ## MIT License (applies to the adapted portions as noted above)
 

@@ -49,7 +49,44 @@ Skip any step = lying, not verifying.
 | Bug fixed | Original symptom re-tested: passes | Code changed, assumed fixed |
 | Regression test works | Red-green verified (fails without fix, passes with) | Test passes once |
 | Subagent completed | Diff inspected, changes verified | Agent reports "success" |
-| Requirements met | Line-by-line checklist against spec/plan | Tests passing |
+| Requirement match | Diff vs brief, line by line | Tests passing |
+
+## The Spec check
+
+"It works" and "it's what was asked" are different claims. Verify both, on
+separate axes:
+
+- **Spec axis** — does the diff match what was asked? The spec source is the
+  `brief` output (or the plan file from `plan`). Walk the diff against it line
+  by line and report: (a) requirements missing or partial, (b) behavior nobody
+  asked for (scope creep), (c) requirements that look implemented but wrong.
+- **Standards axis** — does the code follow this repo's conventions
+  (CLAUDE.md, folder CONTEXT.md, documented standards)?
+
+Report the axes separately and **never rerank across them**: passing tests
+cannot excuse a missed requirement, and a faithful diff cannot excuse a
+convention break. A change can pass one axis and fail the other — merging the
+reports lets one axis mask the other. If there is no brief or plan, say "no
+spec available" in the report; don't invent one.
+
+At T3, the two axes MAY run as parallel subagents (see `delegate`) so neither
+pollutes the other's context; aggregate their findings without merging.
+
+## QA tiers (anything with a browser surface)
+
+QA depth scales with the tier (see `workflow`). Evidence = the checks run and
+their results, not "the page looked fine".
+
+| Tier | Depth | Check |
+|------|-------|-------|
+| T1 | Smoke, ~2 min | Page loads; no console errors; title present; exactly one H1; no broken images or missing alts; canonical points at production, never staging |
+| T2 | Standard, ~10 min | Smoke + meta description and og/twitter tags; sane heading hierarchy; `lang` attribute and favicon; `target="_blank"` links have `noopener`; responsive at 375/768/1440px; primary user flow exercised end to end |
+| T3 | Full, 30+ min | Standard + every form submits and validates; cross-browser (at least Chrome + Safari); internal and external links resolve; security headers (HSTS, X-Frame-Options, X-Content-Type-Options); HTTPS only, no mixed content; 404s return HTTP 404; analytics events fire; cache headers sane |
+
+A failed check is fixed before "done" or reported as a known issue — never
+silently shipped. For the recurring production failure modes (caching, env
+vars, images, third-party integrations), check
+[references/web-bug-patterns.md](references/web-bug-patterns.md).
 
 ## Evidence for a non-coding reviewer
 
@@ -96,7 +133,7 @@ Regression test (red-green):
 ❌ "I've written a regression test" (never seen red)
 
 Requirements:
-✅ Re-read plan → checklist → verify each → report gaps or completion
+✅ Re-read brief/plan → diff vs each line → report gaps or completion
 ❌ "Tests pass, phase complete"
 ```
 
@@ -109,4 +146,4 @@ exact words.
 
 Run the command. Read the output. THEN claim the result. Non-negotiable.
 
-*Adapted from superpowers (MIT, © 2025 Jesse Vincent); see ATTRIBUTION.md.*
+*Adapted from superpowers (MIT, © 2025 Jesse Vincent), mattpocock-skills (MIT, © 2026 Matt Pocock), and rampstack-skills (MIT, © 2026 RampStack Co.); see ATTRIBUTION.md.*

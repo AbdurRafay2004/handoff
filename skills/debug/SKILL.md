@@ -82,6 +82,17 @@ hypothesis space and becomes the regression test later.
 - **Error deep in the call stack?** Trace backward to the original trigger —
   see `references/root-cause-tracing.md`. Fix at the source, not the symptom.
 
+**Pattern signatures** — check the symptom against known cause families first:
+
+| Signature | Likely family — where to look |
+|-----------|-------------------------------|
+| Intermittent, timing-dependent | Race condition — concurrent access to shared state |
+| Type/nil errors on values that "can't" be nil | Null propagation — missing guards on optionals |
+| Inconsistent data, partial updates | State corruption — transactions, callbacks, hooks |
+| Timeouts, unexpected response shapes | Integration failure — external calls, service seams |
+| Works locally, fails in staging/prod | Configuration drift — env vars, flags, DB state |
+| Old data, fixed by a cache clear | Stale cache — Redis, CDN, browser, framework cache |
+
 ## Phase 3 — Hypothesise (plural)
 
 Generate **3–5 ranked hypotheses** before testing any. Single-hypothesis
@@ -136,6 +147,9 @@ architectural, not tactical.** Signs: each fix reveals new coupling elsewhere,
 fixes require massive refactoring, new symptoms keep appearing. Stop fixing
 symptoms and question the pattern itself — discuss with the user before any
 fourth attempt. This is not a failed hypothesis; it's a wrong architecture.
+Offer the escalation explicitly: **A)** continue with a genuinely new, named
+hypothesis; **B)** escalate for human review; **C)** instrument and wait —
+catch it live. Three *refuted hypotheses* in a row is the same signal.
 
 ## Phase 6 — Cleanup + post-mortem
 
@@ -146,6 +160,16 @@ Before declaring done (then run `verify-done`):
 - [ ] All `[DEBUG-...]` instrumentation removed (grep the prefix)
 - [ ] Throwaway harnesses deleted
 - [ ] The winning hypothesis stated in the commit message — the next debugger learns
+
+Close with a compact report — it doubles as the commit-message body:
+```
+DEBUG REPORT
+Symptom:    what was observed
+Loop:       the Phase 1 feedback loop used
+Root cause: what was actually wrong
+Fix:        what changed (file:line)
+Evidence:   red → green output proving it
+```
 
 Then ask: **what would have prevented this bug?** If the answer is
 architectural, note it in `.agent-orch/` state or the backlog — after the fix
@@ -185,4 +209,4 @@ investigation.
 - `references/defense-in-depth.md` — validate at every layer so the bug becomes impossible
 - `references/condition-based-waiting.md` — replace arbitrary timeouts with condition polling (flaky tests)
 
-*Adapted from superpowers (MIT, © 2025 Jesse Vincent) and mattpocock-skills (MIT, © 2026 Matt Pocock); see ATTRIBUTION.md.*
+*Adapted from superpowers (MIT, © 2025 Jesse Vincent), mattpocock-skills (MIT, © 2026 Matt Pocock), and gstack (MIT, © Garry Tan); see ATTRIBUTION.md.*

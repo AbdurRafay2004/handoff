@@ -115,10 +115,22 @@ seam and satisfies the interface. Depth produces **Leverage** for callers and
   narrow — interface includes every fact a caller must know.
 - **"Boundary"**: say **seam** or **interface**.
 
-## Domain modeling
+## UI component checklist
+
+A component isn't designed until, per component, you've named its **states**
+(default, hover, focus, active, disabled, loading, error, empty — each needs
+visual *and* a11y treatment), its **variants** as a managed enum set (not
+boolean-prop explosions), its **props API** (minimal required props; children
+over content-props; composition over configuration), and its **a11y** path
+(semantic elements, keyboard navigable, visible focus, ARIA only where HTML
+falls short).
+
+## Going deeper
 
 When the work involves pinning down domain terminology, recording an
 architectural decision, or stress-testing concept boundaries, see
 `references/domain-modeling.md`.
 
-*Adapted from mattpocock-skills (MIT, © 2026 Matt Pocock); see ATTRIBUTION.md.*
+To deepen a cluster of shallow modules safely, see `references/deepening.md`.
+
+*Adapted from mattpocock-skills (MIT, © 2026 Matt Pocock) and rampstack-skills (MIT, © 2026 RampStack Co.); see ATTRIBUTION.md.*

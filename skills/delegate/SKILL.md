@@ -76,6 +76,22 @@ A subagent inherits none of your session. You construct exactly what it needs:
   surfaces multiple issues, dispatch a single fix agent with the complete
   list — per-finding fixers each rebuild context and re-run suites.
 
+## Checkpoint economics
+
+A **checkpoint** is a human-in-the-loop decision point — a subagent reporting
+back to you, or you presenting a tier gate to the user. Two rules:
+
+- **Push right.** Defer a checkpoint as late as it will go, so whoever waits
+  is asked once, late, with maximum work already done. A subagent that comes
+  back to ask what it could have discovered itself wasted its dispatch; a T3
+  approval gate should arrive with the plan complete, not in fragments.
+- **Arrive decision-ready.** A checkpoint presents a synthesized decision,
+  never raw output: what was produced, why, the recommendation, a pointer to
+  the artifact. Demand this shape in the dispatch prompt's "expected return";
+  produce it yourself at the user's tier gates.
+
+*Checkpoint vocabulary from the user's loop-me skill.*
+
 ## Review scaling
 
 Independent review passes (a separate reviewer agent over the diff) are a

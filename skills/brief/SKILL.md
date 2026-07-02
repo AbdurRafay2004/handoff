@@ -26,6 +26,13 @@ edge cases, failure paths — then STOP. Don't design the universe.
 recent commits, `.agent-orch/` state if present. If a question can be answered
 by exploring the codebase, explore the codebase instead of asking.
 
+**Read the code before you ask.** Before asking anything the code could
+answer, gather at least one piece of evidence — grep the symbol, read the
+file — and cite `path:line` in the question itself: not "does this touch the
+database?" but "`orders/service.ts:142` writes to `orders` directly — new
+column there, or a separate table?" Grounded questions get grounded answers.
+If you truly find nothing, say what you searched and proceed as greenfield.
+
 **Assess scope before refining details.** If the request describes multiple
 independent subsystems ("build a platform with chat, billing, and analytics"),
 flag it immediately and help decompose into sub-projects: what are the
@@ -65,6 +72,14 @@ but don't propose unrelated refactoring.
 
 ## Writing the spec (T3)
 
+Open with a one-line **impact/effort call** (high-impact/low-effort → do now;
+low-impact/high-effort → question the spec itself) so the reader knows whether
+the work earns its cost. Give every requirement **testable acceptance
+criteria** — numbered, pass/fail, no subjective language:
+
+- ✅ "Expired orders return HTTP 410 for all 4 user roles"
+- ❌ "The feature works correctly" / "edge cases are handled"
+
 Save to `docs/specs/YYYY-MM-DD-<topic>.md` (user preferences override) and
 self-review it with fresh eyes:
 
@@ -86,4 +101,4 @@ Only move to the `plan` skill once they approve.
 - Surface failure paths early; they are where specs go wrong.
 - Stop when the load-bearing decisions are settled.
 
-*Adapted from superpowers (MIT, © 2025 Jesse Vincent) and mattpocock-skills (MIT, © 2026 Matt Pocock); see ATTRIBUTION.md.*
+*Adapted from superpowers (MIT, © 2025 Jesse Vincent), mattpocock-skills (MIT, © 2026 Matt Pocock), gstack (MIT, © Garry Tan), and rampstack-skills (MIT, © 2026 RampStack Co.); see ATTRIBUTION.md.*

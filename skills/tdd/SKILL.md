@@ -114,7 +114,8 @@ test('retry works', async () => {
 - One behavior per test; "and" in the name means split it.
 - Real code over mocks — mock only what's unavoidable (network, clock, true
   externals). If you must mock everything, the code is too coupled: inject
-  dependencies instead.
+  dependencies instead. Boundary rules and mock-friendly interface design:
+  `references/mocking.md`.
 - Testing mock behavior instead of real behavior is the classic false
   positive: the suite goes green while the product is broken.
 
