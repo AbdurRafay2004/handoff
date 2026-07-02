@@ -20,8 +20,9 @@ before anything is saved.** Never invent project facts (RULES rule 5).
 
 ## 1. Copy the template tree
 Copy the bundled `templates/` into the project as `.agent-orch/`, preserving
-structure (BOOT, RULES, STATUS, MAP, CHANGELOG, context/, tasks/ with
-inbox/now/done). Keep the `.gitkeep` files. Do not edit RULES' universal section.
+structure (BOOT, RULES, STATUS, MAP, CHANGELOG, context/, docs/ with
+SKILL-WORKFLOW.md, tasks/ with inbox/now/done). Keep the `.gitkeep` files.
+Do not edit RULES' universal section.
 
 ## 2. Guided discovery (read the repo — do not guess)
 Read what actually exists, quietly:
