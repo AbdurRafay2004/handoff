@@ -23,6 +23,14 @@ cost only when it buys something.
 4. **Isolated large workstream (T3):** big enough that a fresh, focused
    context outperforms a crowded one.
 
+When one of these triggers fires, **surface the decision to the user rather
+than deciding silently** — name the task, that it's token-heavy or parallel,
+and a suggested model tier matched to the work, then let them choose
+delegate-or-inline. Staying the orchestrator on
+token-heavy and isolated coding work is the default; don't quietly absorb it
+into the main context. (This ask does not apply to the anti-triggers below —
+those stay inline without a prompt.)
+
 **Anti-triggers — do it inline instead:**
 - Small, sequential, or interdependent work.
 - A 30-line change never needs an agent round-trip.

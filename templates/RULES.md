@@ -14,19 +14,26 @@ These ship with agent-orch and apply regardless of stack.
 4. Never `git add -A` / `git add .` for a scoped commit — stage only files you changed.
 5. Don't assume project behavior that isn't documented or visible in code.
 6. Ask before turning an unclear preference into a permanent rule.
+7. Surface the delegate decision. Before doing token-heavy work (broad
+   searches, verbose build/test output) or an isolated coding workstream
+   inline, propose handing it to a subagent — with a suggested model tier
+   matched to the task — and let the user decide. Don't silently work inline,
+   and don't silently delegate. Small, sequential, or interdependent edits
+   stay inline without asking. (See the `delegate` skill for how to dispatch
+   well.)
 
 ### State
-7. Update `STATUS.md` and `CHANGELOG.md` whenever code or configuration changed —
+8. Update `STATUS.md` and `CHANGELOG.md` whenever code or configuration changed —
    BEFORE committing, so state rides in the same commit as the code it describes.
    Never add a trailing docs-only commit; amend if not yet pushed.
-8. Use `tasks/` for durable follow-ups, not chat history. Task files live in
+9. Use `tasks/` for durable follow-ups, not chat history. Task files live in
    `tasks/inbox/`, `tasks/now/`, or `tasks/done/` — never in the `tasks/` root.
 
 ### Safety
-9. Never hardcode secrets, credentials, or environment-specific values.
+10. Never hardcode secrets, credentials, or environment-specific values.
 
 ### Verification
-10. Verify behavior with the project's verify commands (see `context/TECH_STACK.md`)
+11. Verify behavior with the project's verify commands (see `context/TECH_STACK.md`)
     before reporting completion.
 
 ## Project-Specific Rules
