@@ -34,7 +34,7 @@ Do not confuse the two layers:
 
 Everything is driven by three hooks registered in `hooks/hooks.json` (auto-loaded
 because it lives at `hooks/hooks.json` — the plugin manifest deliberately does **not**
-declare a `hooks` field; see commit 514a6dc). Each hook is a thin `python3` entry that
+declare a `hooks` field; see commit 1844000). Each hook is a thin `python3` entry that
 imports shared logic from `hooks/_common.py`:
 
 - **`sessionstart.py`** (SessionStart) — if the target repo has `.handoff/`, injects
@@ -80,7 +80,7 @@ regressions against them.
 4. **PreToolUse injects context only, no permission decision.**
 5. **Path safety in `pre_edit_context.py`:** edits outside the project root are ignored,
    relative paths resolve against the project root (not the hook's cwd), and the walk-up
-   stops at the root. Preserve these checks (commit df0a81e).
+   stops at the root. Preserve these checks (commit d6810e4).
 6. **Changes under `.handoff/` are excluded** from the Stop hook's "new work" set, so
    updating state doesn't itself trigger a nudge.
 
