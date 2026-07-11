@@ -42,13 +42,16 @@ the right moment — and nothing more:
   rules. That's it — a few hundred tokens, not thousands.
 - When it's about to edit a file in a folder that has notes (`CONTEXT.md`),
   those notes get injected right then. Not before.
-- When a session ends with code changed but the status file untouched, the
-  agent gets a one-line reminder to update it — in the same commit as the code.
+- When a session ends having changed code — committed or not — without
+  updating the status, the agent gets reminded to bring the notes up to date,
+  in the same commit as the code. It knows the difference between your
+  session's work and dirt that was already there, and it never nags twice
+  about the same thing.
 
-No server. No database. No dependencies — three small Python scripts, standard
-library only. If a hook ever fails, it stays silent and your session is
-unaffected. And since it's all just files in git, your memory travels with the
-repo: every clone and every teammate gets it for free.
+No server. No database. No dependencies — three Python hooks and one shared
+helper file, standard library only. If a hook ever fails, it stays silent and
+your session is unaffected. And since it's all just files in git, your memory
+travels with the repo: every clone and every teammate gets it for free.
 
 ## Quick start
 
@@ -92,6 +95,67 @@ The whole idea in one sentence: **the files that are always relevant are
 pushed every session; everything else costs nothing until it's actually
 needed.**
 
+## The tasks backlog
+
+This might be the best part of the whole system. Instead of follow-ups dying
+in chat history, they live as small markdown files that move through three
+folders:
+
+```
+tasks/inbox/   # new ideas, bugs, follow-ups land here
+tasks/now/     # the small set you're actually working on
+tasks/done/    # finished (or deliberately closed)
+```
+
+Each task is one file that carries everything a future session needs to pick
+it up cold — no chat history required:
+
+```markdown
+---
+title: Fix flaky checkout test
+status: now
+priority: high
+why_it_matters: Blocks every release; CI reruns waste ~20 min a day.
+context: Fails only when the cart has a discount code. Started after #142.
+---
+
+## Notes
+- Repro: run checkout.spec.ts with SEED=7
+
+## Verification
+- npx vitest checkout.spec.ts — passes 10/10 runs
+```
+
+Notice the `Verification` section: a task states how to prove it's done, so
+whoever (or whatever session) finishes it knows when to stop.
+
+The hooks quietly keep this tidy. If the agent tries to write a task file to
+the `tasks/` root instead of a status folder, it gets corrected *before the
+file lands* — and again at the end of the turn if any strays remain. Skills
+feed the backlog too: debugging leaves architectural findings there, and
+retrospectives file their action items as tasks instead of letting them
+evaporate.
+
+## Guard rails you'll appreciate later
+
+A few small mechanisms that don't show up until they save you:
+
+- **Approval gates that hold.** Risky work (T3) stops at a `.handoff/GATE`
+  file with the question awaiting your answer. While that file exists the
+  agent won't proceed — even an autonomous loop just idles there until you
+  rule.
+- **Risky paths get flagged automatically.** Touch anything matching
+  migrations, auth, billing, `.env` and the like, and the end-of-turn check
+  asks whether this was treated with the care it deserves. The pattern list
+  is per-repo configurable via `.handoff/SENTINELS`.
+- **Status bloat is policed.** `STATUS.md` loads every session, so it's a tax
+  if it grows. Past 40 lines the agent gets told to prune it (target: 25).
+- **Clones without the plugin still work.** Setup writes a small fallback
+  block into your `CLAUDE.md`, so a teammate who hasn't installed handoff
+  still gets the core rules and knows where the notes live.
+- **Stale installs get noticed.** Setup stamps `.handoff/VERSION`; when the
+  plugin moves ahead of an install, you're told instead of drifting silently.
+
 ## The workflow part
 
 handoff also ships a set of skills that give the agent a sane way of working.
@@ -119,8 +183,16 @@ disable the original packs to avoid duplicate instructions.
 
 - Files edited through shell commands (`sed`, `cat >`) don't trigger the
   folder-notes injection — only real Edit/Write tool calls do.
-- On very large repos, if `git status` takes more than 10 seconds, the
-  end-of-session reminder quietly skips that turn.
+- On very large repos, git commands in the hooks time out after 10 seconds;
+  when that happens the affected check quietly skips that turn.
+- `/compact` resets the session's change tracking — work done before a
+  compaction may not get the end-of-turn reminder afterward.
+- Work you've already pushed doesn't trigger the reminder (deliberate: the
+  hook would rather stay quiet than nag about published commits), and the
+  very first turn after adopting the hooks is silent while it takes its
+  baseline.
+- The risky-path flagging is pattern matching, not a security scanner — it
+  catches `migrations/`, misses cleverly-named danger.
 - Repos without git don't get the end-of-session reminder (it needs git to
   see what changed).
 - Only Claude Code for now.
