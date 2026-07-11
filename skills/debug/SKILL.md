@@ -110,6 +110,9 @@ Also compare against working examples: find similar code that works in the same
 codebase, read reference implementations completely (don't skim), and list every
 difference, however small — don't assume "that can't matter."
 
+> A broad search for those examples (vs. a couple of targeted greps) is a
+> delegate trigger — ask the user delegate-or-inline first (`delegate` skill).
+
 ## Phase 4 — Instrument and test hypotheses
 
 - Each probe maps to a specific prediction. **One variable at a time.**

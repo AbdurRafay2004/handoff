@@ -1,6 +1,6 @@
 {
   "name": "agent-orch",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Portable project memory + development workflow for coding agents: auto-loads STATUS+RULES each session, enforces folder-level CONTEXT.md on edit, nudges durable state updates at turn end, scaffolds the system into any repo via guided discovery, and ships a tiered 6-phase workflow skill set covering every phase (brief, plan, tdd, debug, verify-done, design, delegate, ship, learn, security, architecture, browser-qa).",
   "author": {
     "name": "Rafay"

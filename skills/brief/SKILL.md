@@ -26,6 +26,9 @@ edge cases, failure paths — then STOP. Don't design the universe.
 recent commits, `.agent-orch/` state if present. If a question can be answered
 by exploring the codebase, explore the codebase instead of asking.
 
+> If that exploration turns broad (vs. a few targeted greps), it's a delegate
+> trigger — ask the user delegate-or-inline first (`delegate` skill).
+
 **Read the code before you ask.** Before asking anything the code could
 answer, gather at least one piece of evidence — grep the symbol, read the
 file — and cite `path:line` in the question itself: not "does this touch the

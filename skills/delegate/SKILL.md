@@ -23,13 +23,11 @@ cost only when it buys something.
 4. **Isolated large workstream (T3):** big enough that a fresh, focused
    context outperforms a crowded one.
 
-When one of these triggers fires, **surface the decision to the user rather
-than deciding silently** — name the task, that it's token-heavy or parallel,
-and a suggested model tier matched to the work, then let them choose
-delegate-or-inline. Staying the orchestrator on
-token-heavy and isolated coding work is the default; don't quietly absorb it
-into the main context. (This ask does not apply to the anti-triggers below —
-those stay inline without a prompt.)
+When a trigger fires, **stop and call `AskUserQuestion`**: name the task, why it
+triggered, a suggested model tier, and delegate-or-inline as options. Never
+decide silently in either direction. This applies at the trigger point, whenever
+it fires — including in the middle of another skill's process. (Doesn't apply to
+the anti-triggers below.)
 
 **Anti-triggers — do it inline instead:**
 - Small, sequential, or interdependent work.

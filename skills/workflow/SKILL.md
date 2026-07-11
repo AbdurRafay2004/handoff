@@ -61,13 +61,11 @@ Delegate when the `delegate` skill's triggers are met — a search/read that wou
 flood context, verbose build/test output, independent parallel tasks, or an
 isolated T3 workstream. A 30-line change never needs an agent round-trip.
 
-**Surface the decision, don't make it silently.** When a task hits a delegate
-trigger, pause and propose it to the user — "this is token-heavy; delegate to a
-subagent (suggested tier: …), or run inline?" — and let them choose, matching
-the suggested model tier to the task. Default to staying the
-orchestrator on token-heavy and isolated coding workstreams rather than
-absorbing them into the main context. Small, sequential, or interdependent
-edits stay inline without asking.
+**Surface the decision as a choice, not a sentence.** On a delegate trigger,
+STOP and offer delegate-or-inline via `AskUserQuestion` (with a suggested model
+tier) — never silently spawn a subagent or silently work inline. This fires at
+the trigger point, even in the middle of another skill's process. Small,
+sequential, or interdependent edits stay inline without asking.
 
 ## The T3 gate is machine-readable
 

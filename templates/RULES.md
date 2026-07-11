@@ -14,13 +14,11 @@ These ship with agent-orch and apply regardless of stack.
 4. Never `git add -A` / `git add .` for a scoped commit — stage only files you changed.
 5. Don't assume project behavior that isn't documented or visible in code.
 6. Ask before turning an unclear preference into a permanent rule.
-7. Surface the delegate decision. Before doing token-heavy work (broad
-   searches, verbose build/test output) or an isolated coding workstream
-   inline, propose handing it to a subagent — with a suggested model tier
-   matched to the task — and let the user decide. Don't silently work inline,
-   and don't silently delegate. Small, sequential, or interdependent edits
-   stay inline without asking. (See the `delegate` skill for how to dispatch
-   well.)
+7. On a delegate trigger (broad search/mapping, verbose output, parallel or
+   isolated work), stop and ask delegate-or-inline via `AskUserQuestion` with a
+   suggested model tier — never decide silently, even mid-skill. Small,
+   sequential, or interdependent edits stay inline without asking. (See the
+   `delegate` skill.)
 
 ### State
 8. Update `STATUS.md` and `CHANGELOG.md` whenever code or configuration changed —

@@ -29,6 +29,9 @@ Every run — even T2 — ends with a health score and the plain-language summar
 Test what changed, not the whole site. From `git diff main...HEAD --name-only` and
 `git log main..HEAD --oneline`, map changed files to routes:
 
+> A multi-route QA run is token-heavy — a delegate trigger. Ask the user
+> delegate-or-inline before running it (`delegate` skill).
+
 | Changed file | Routes to test |
 |---|---|
 | Route/page file (`app/**/page.tsx`, `pages/foo.tsx`, `src/pages/foo.astro`) | The route it serves (`/foo`) |
