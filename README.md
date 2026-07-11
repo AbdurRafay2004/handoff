@@ -47,6 +47,10 @@ the right moment — and nothing more:
   in the same commit as the code. It knows the difference between your
   session's work and dirt that was already there, and it never nags twice
   about the same thing.
+- Unfinished work doesn't vanish with the session. Follow-ups, bugs, and ideas
+  become small task files in a backlog inside the repo — written so that any
+  future session can pick one up cold and know when it's done ([more
+  below](#the-tasks-backlog)).
 
 No server. No database. No dependencies — three Python hooks and one shared
 helper file, standard library only. If a hook ever fails, it stays silent and
