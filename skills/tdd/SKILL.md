@@ -50,7 +50,7 @@ repeat. Each test responds to what the previous cycle taught you.
 
 ### 1. Plan the behaviors
 
-Read the nearest `CONTEXT.md` / `.agent-orch/context/` so test names match the
+Read the nearest `CONTEXT.md` / `.handoff/context/` so test names match the
 project's domain language. Then, before any code:
 
 - Confirm with the user what interface changes are needed.

@@ -68,7 +68,7 @@ then. Stale output is not acceptable; trivial changes break production too.
 - Failing tests or failing CI → **blocker**. Never merge red.
 - Merge conflicts (`gh pr view --json mergeable`) → blocker until resolved.
 - Stale durable state → **warning, not blocker**: if the diff adds features but
-  `.agent-orch/STATUS.md` / `CHANGELOG.md` weren't touched, flag it and offer to
+  `.handoff/STATUS.md` / `CHANGELOG.md` weren't touched, flag it and offer to
   update before merging.
 - PR body accuracy: compare the body against `git log <base>..HEAD --oneline`.
   A PR body describing last week's version of the change is a warning — fix it,
@@ -132,8 +132,8 @@ Rollback: `wrangler rollback` (Workers) or re-deploy the previous version.
 **First deploy of a repo = dry run first.** Detect the target, echo the exact
 commands, account/project, and environment you're about to hit, and confirm with
 the user before running anything. Then record the confirmed setup (platform,
-commands, prod URL, staging URL if any) in `.agent-orch/context/DEPLOY.md` (or
-the repo's CLAUDE.md if no `.agent-orch/`) — and fingerprint it: on later ships,
+commands, prod URL, staging URL if any) in `.handoff/context/DEPLOY.md` (or
+the repo's CLAUDE.md if no `.handoff/`) — and fingerprint it: on later ships,
 if the deploy config files or CI deploy workflows changed since that record,
 re-confirm instead of assuming the old understanding still holds.
 

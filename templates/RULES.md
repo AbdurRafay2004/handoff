@@ -5,7 +5,7 @@ only when a rule is stable, project-wide, and explicitly accepted by the user.
 Keep temporary preferences in task notes or `STATUS.md`.
 
 ## Universal Non-Negotiables
-These ship with agent-orch and apply regardless of stack.
+These ship with handoff and apply regardless of stack.
 
 ### Process
 1. Don't read or modify unrelated parts of the repo unless the task requires it.
@@ -35,7 +35,7 @@ These ship with agent-orch and apply regardless of stack.
     before reporting completion.
 
 ## Project-Specific Rules
-<!-- Populated by `/agent-orch:setup` discovery and as the user establishes rules.
+<!-- Populated by `/handoff:setup` discovery and as the user establishes rules.
      Examples: build system, design tokens, content sources, API contracts,
      framework conventions, breakpoints. Keep each rule short enough to apply
      during normal work. -->

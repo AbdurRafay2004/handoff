@@ -1,4 +1,4 @@
-"""Shared helpers for agent-orch hooks.
+"""Shared helpers for handoff hooks.
 
 Every hook is fail-safe: on any error it prints nothing and exits 0, so a bug
 here can never break the user's session.
@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 
-AGENT_DIR = ".agent-orch"
+AGENT_DIR = ".handoff"
 
 
 def read_stdin_json():
@@ -35,7 +35,7 @@ def agent_base(root):
     return os.path.join(root, AGENT_DIR)
 
 
-def has_agent_orch(root):
+def has_handoff(root):
     return os.path.isdir(agent_base(root))
 
 
@@ -50,7 +50,7 @@ def read_file(path):
 def data_dir():
     """A writable, persistent-ish directory for markers."""
     base = os.environ.get("CLAUDE_PLUGIN_DATA") or os.path.join(
-        os.path.expanduser("~"), ".cache", "agent-orch"
+        os.path.expanduser("~"), ".cache", "handoff"
     )
     try:
         os.makedirs(base, exist_ok=True)
@@ -62,7 +62,7 @@ def data_dir():
 def session_marker_dir(session_id):
     """Per-session scratch dir for de-duping injections within one session."""
     sid = session_id or "nosession"
-    d = os.path.join(tempfile.gettempdir(), "agent-orch-session-" + _short(sid))
+    d = os.path.join(tempfile.gettempdir(), "handoff-session-" + _short(sid))
     try:
         os.makedirs(d, mode=0o700, exist_ok=True)
         os.chmod(d, 0o700)  # tighten even if the dir pre-existed

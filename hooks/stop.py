@@ -18,7 +18,7 @@ prompted this design):
   3. nudge signature   -> never nudge twice for the same unresolved situation,
                           even if (1) doesn't fire for additionalContext continuations.
 
-Only fires in repos that have .agent-orch/ and are git repos.
+Only fires in repos that have .handoff/ and are git repos.
 """
 import os
 import re
@@ -26,7 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import (  # noqa: E402
-    read_stdin_json, project_root, has_agent_orch, emit, AGENT_DIR,
+    read_stdin_json, project_root, has_handoff, emit, AGENT_DIR,
     git_status_codes, git_head, git_local_commit_codes, load_baseline,
     save_baseline, last_nudge_signature, set_nudge_signature, signature,
     read_file, session_marker_dir, marker_seen, marker_set, _short,
@@ -66,7 +66,7 @@ def misfiled_tasks(root):
 
 
 def sentinel_patterns(root):
-    """Per-repo sentinel list (.agent-orch/SENTINELS, one pattern per line) or defaults."""
+    """Per-repo sentinel list (.handoff/SENTINELS, one pattern per line) or defaults."""
     body = read_file(os.path.join(root, AGENT_DIR, "SENTINELS"))
     if body:
         pats = tuple(l.strip().lower() for l in body.splitlines()
@@ -107,7 +107,7 @@ def main():
         sys.exit(0)
 
     root = project_root(payload)
-    if not has_agent_orch(root):
+    if not has_handoff(root):
         sys.exit(0)
 
     codes = git_status_codes(root)
@@ -223,9 +223,9 @@ def main():
     # deduped by the signature cooldown like every other note.
     if gate:
         first = gate.splitlines()[0][:200]
-        notes.append("a T3 gate is OPEN (.agent-orch/GATE): \"{}\" — do not proceed "
+        notes.append("a T3 gate is OPEN (.handoff/GATE): \"{}\" — do not proceed "
                      "past it; wait for the user's ruling. Autonomous goals/loops must "
-                     "idle at this gate. Delete .agent-orch/GATE once the user has "
+                     "idle at this gate. Delete .handoff/GATE once the user has "
                      "ruled".format(first))
 
     if not notes and not stray_note and not stale:
@@ -242,10 +242,10 @@ def main():
     if stray_note:
         notes.append(stray_note)
 
-    msg = ["agent-orch reminder — you changed project files this session:"]
+    msg = ["handoff reminder — you changed project files this session:"]
     msg += ["  - " + n for n in notes]
     msg += ["  - {} may need updating for the folder you edited".format(c) for c in sorted(stale)]
-    msg.append("Update durable state before wrapping up (see .agent-orch/BOOT.md). "
+    msg.append("Update durable state before wrapping up (see .handoff/BOOT.md). "
                "State updates ride in the SAME commit as the code they describe — "
                "if you already committed, haven't pushed, AND the last commit is your "
                "own work from this session (not a merge or someone else's), "

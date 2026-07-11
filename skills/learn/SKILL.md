@@ -65,7 +65,7 @@ and dates, and hard truths still get said.
 
 ### 3. Trend awareness
 
-Before writing new entries, read the existing `.agent-orch/context/LEARNINGS.md`
+Before writing new entries, read the existing `.handoff/context/LEARNINGS.md`
 and recent `CHANGELOG.md`. If this retro's pitfall already has an entry, that
 is the finding: a **repeat** — raise its confidence, say so out loud, and
 propose a stronger fix (often a RULES.md candidate) instead of logging a
@@ -73,16 +73,16 @@ duplicate.
 
 ## Where outputs land
 
-All durable output goes into the repo's `.agent-orch/` tree so it travels
+All durable output goes into the repo's `.handoff/` tree so it travels
 with the code:
 
 | Output | Destination |
 |---|---|
-| What shipped / what broke, one dated line | `.agent-orch/CHANGELOG.md` |
-| Typed learnings (schema below) | `.agent-orch/context/LEARNINGS.md` |
-| A new invariant ("never X", "always Y") | `.agent-orch/RULES.md` — **only** after proposing it and the user explicitly accepts. Never write RULES unilaterally. |
-| Action items that outlive this session | `.agent-orch/tasks/inbox/` (one file per follow-up) |
-| Current state change | `.agent-orch/STATUS.md` |
+| What shipped / what broke, one dated line | `.handoff/CHANGELOG.md` |
+| Typed learnings (schema below) | `.handoff/context/LEARNINGS.md` |
+| A new invariant ("never X", "always Y") | `.handoff/RULES.md` — **only** after proposing it and the user explicitly accepts. Never write RULES unilaterally. |
+| Action items that outlive this session | `.handoff/tasks/inbox/` (one file per follow-up) |
+| Current state change | `.handoff/STATUS.md` |
 
 A full retro writeup can be shown in chat; the durable residue is the files
 above. No JSON snapshots, no home-directory state — if it isn't committed,

@@ -25,7 +25,7 @@ plan*, executed via the `plan` skill — never an immediate rewrite.
 - Use the `design` skill's glossary exactly — **module**, **interface**, **depth**,
   **seam**, **leverage**, **locality** — in every suggestion. Don't drift into
   "component," "service," "API," or "boundary."
-- Read the project's domain glossary and context notes in `.agent-orch/context/`
+- Read the project's domain glossary and context notes in `.handoff/context/`
   and any ADRs in `docs/adr/` **before** scanning. Domain language names good
   seams; ADRs record decisions this skill should not re-litigate.
 - Name things in domain terms: if the glossary defines "Order," talk about
@@ -100,10 +100,10 @@ alternative interfaces for the deepened module, lean on the `design` skill.
 Side effects happen inline as decisions crystallize:
 
 - **Naming a deepened module after a concept not in the glossary?** Add the term
-  to the domain notes in `.agent-orch/context/`. Sharpened a fuzzy term mid-
+  to the domain notes in `.handoff/context/`. Sharpened a fuzzy term mid-
   conversation? Update it right there.
 - **User rejects the candidate with a load-bearing reason?** Offer to record it —
-  in `.agent-orch/context/LEARNINGS.md` as a `pitfall` entry ("rejected: X
+  in `.handoff/context/LEARNINGS.md` as a `pitfall` entry ("rejected: X
   because Y") or as an ADR in `docs/adr/` — framed as:
   *"Want me to record this so future architecture scans don't re-suggest it?"*
   Only offer when a future explorer would actually need the reason; skip

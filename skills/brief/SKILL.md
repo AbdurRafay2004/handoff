@@ -23,7 +23,7 @@ edge cases, failure paths — then STOP. Don't design the universe.
 ## The process
 
 **Understand the context first.** Check current project state — files, docs,
-recent commits, `.agent-orch/` state if present. If a question can be answered
+recent commits, `.handoff/` state if present. If a question can be answered
 by exploring the codebase, explore the codebase instead of asking.
 
 > If that exploration turns broad (vs. a few targeted greps), it's a delegate

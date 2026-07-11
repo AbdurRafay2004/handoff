@@ -15,7 +15,7 @@ off, read `RULES.md` and `STATUS.md` first.
 2. `STATUS.md` — current state and next steps *(auto-loaded)*
 3. `tasks/now/` — when continuing active work; `tasks/WORKFLOW.md` when
    creating, moving, or closing tasks
-4. `.agent-orch/skills/` — if this directory exists, check it before starting
+4. `.handoff/skills/` — if this directory exists, check it before starting
    a complex task; it holds project-local workflows earlier sessions recorded
 
 ## Read on demand — only when the task needs it
@@ -54,7 +54,7 @@ otherwise a follow-up commit is acceptable.
    something durable (see the `learn` skill; it creates the file on first use)
 9. `<dir>/CONTEXT.md` — create or update when a folder gains local architecture
    or conventions future sessions should read before editing there
-10. `.agent-orch/skills/<name>/SKILL.md` — create when you established a
+10. `.handoff/skills/<name>/SKILL.md` — create when you established a
     project-specific workflow future sessions need (major error recovered,
     non-obvious procedure, recurring task shape)
 

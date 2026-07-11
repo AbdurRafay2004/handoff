@@ -1,11 +1,11 @@
 # Skill Workflow — what to reach for, when
 
-How agent-orch skills compose: agent-orch owns state AND process. The workflow
+How handoff skills compose: handoff owns state AND process. The workflow
 layer replaces any external process packs — one sequencer, no competing ones.
 
 ## Three layers
 
-- **State** — agent-orch memory (`.agent-orch/`: STATUS, RULES, CONTEXT.md,
+- **State** — handoff memory (`.handoff/`: STATUS, RULES, CONTEXT.md,
   tasks, LEARNINGS). Automatic via hooks.
 - **Process** — the `workflow` skill + its technique skills. Tier-driven;
   `workflow` alone decides sequencing and how much ceremony a task gets.
@@ -26,33 +26,33 @@ If heavy process lands on a light task: say "this is T1". That ruling stands.
 
 ## The pipeline, phase by phase
 
-1. **Brief** — `agent-orch:brief`. Questions one at a time, code cited `path:line`, the user's approval on the spec.
-2. **Plan** — `agent-orch:plan` (T2/T3); `agent-orch:design` when interfaces/seams are the question.
-3. **Build** — inline by default. `agent-orch:tdd` (T3 mandatory);
-   `agent-orch:delegate` ONLY for context-flooding work or true parallelism.
-   Bug → `agent-orch:debug`; 3+ failed fixes → `agent-orch:architecture`.
+1. **Brief** — `handoff:brief`. Questions one at a time, code cited `path:line`, the user's approval on the spec.
+2. **Plan** — `handoff:plan` (T2/T3); `handoff:design` when interfaces/seams are the question.
+3. **Build** — inline by default. `handoff:tdd` (T3 mandatory);
+   `handoff:delegate` ONLY for context-flooding work or true parallelism.
+   Bug → `handoff:debug`; 3+ failed fixes → `handoff:architecture`.
 4. **Verify** — typecheck/lint/tests/build, then code review (T2+),
-   `agent-orch:browser-qa`, `agent-orch:security` + `/security-review` (T3).
-   Gate: `agent-orch:verify-done` — evidence the user can judge, including
+   `handoff:browser-qa`, `handoff:security` + `/security-review` (T3).
+   Gate: `handoff:verify-done` — evidence the user can judge, including
    the Spec check (is it what was asked?).
-5. **Ship** — `agent-orch:ship`. Branch → PR → merge → deploy → smoke check.
+5. **Ship** — `handoff:ship`. Branch → PR → merge → deploy → smoke check.
    T3: launch runbook with rollback criteria set BEFORE deploying.
-6. **Learn** — `agent-orch:learn` (T3/incidents only). CHANGELOG + LEARNINGS.md;
+6. **Learn** — `handoff:learn` (T3/incidents only). CHANGELOG + LEARNINGS.md;
    RULES.md only when the user explicitly accepts a new rule.
 
 ## When X happens, reach for Y
 
 | Situation | Reach for |
 |---|---|
-| Something's broken / test fails | `agent-orch:debug` — no fixes before root cause |
-| 3+ fixes failed | `agent-orch:architecture` |
-| "Is it actually done?" | `agent-orch:verify-done` |
-| Deploy / release / go live | `agent-orch:ship` |
-| Codebase feels painful | `agent-orch:architecture` (proactive scan) |
-| QA the site in a browser | `agent-orch:browser-qa` |
-| Full security audit | `agent-orch:security` (diff-only: `/security-review`) |
-| Search/build would flood context | `agent-orch:delegate` |
-| New repo | `agent-orch:setup`, then `setup-pre-commit` + `git-guardrails-claude-code` (if installed; one-time hardening) |
+| Something's broken / test fails | `handoff:debug` — no fixes before root cause |
+| 3+ fixes failed | `handoff:architecture` |
+| "Is it actually done?" | `handoff:verify-done` |
+| Deploy / release / go live | `handoff:ship` |
+| Codebase feels painful | `handoff:architecture` (proactive scan) |
+| QA the site in a browser | `handoff:browser-qa` |
+| Full security audit | `handoff:security` (diff-only: `/security-review`) |
+| Search/build would flood context | `handoff:delegate` |
+| New repo | `handoff:setup`, then `setup-pre-commit` + `git-guardrails-claude-code` (if installed; one-time hardening) |
 | Watch a deploy / recurring check | `/loop` (self-paced) — or `schedule` if unattended |
 | Grind the backlog / drive work to done | `/goal` with a measurable condition (tiers still gate T3) |
 | Merge conflict mid-ship | `resolving-merge-conflicts` (if installed) |
@@ -75,6 +75,6 @@ Never let "empty the backlog" self-approve money/auth/data work.
   technique. A skill running its own workflow is a bug in the skill.
 - **Evidence over claims.** The user judges demos, test output, and preview
   URLs — never "the code looks right".
-- **One of each spine:** one task system (`.agent-orch/tasks/`), one meaning
-  for `CONTEXT.md`, one learnings file (`.agent-orch/context/LEARNINGS.md`).
+- **One of each spine:** one task system (`.handoff/tasks/`), one meaning
+  for `CONTEXT.md`, one learnings file (`.handoff/context/LEARNINGS.md`).
 - **Keep STATUS.md ≤ 25 lines** — it is injected every session; drift is a token tax.

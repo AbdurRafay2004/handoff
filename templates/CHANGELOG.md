@@ -7,4 +7,4 @@ Newest first. STATUS.md holds the present; this file holds what happened.
 - `YYYY-MM-DD` — short description of the change and why it mattered.
 
 ## History
-- `<YYYY-MM-DD>` — Project initialized with agent-orch.
+- `<YYYY-MM-DD>` — Project initialized with handoff.

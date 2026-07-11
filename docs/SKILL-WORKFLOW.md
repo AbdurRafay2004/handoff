@@ -1,15 +1,15 @@
 # Skill Workflow — what to reach for, when
 
-Personal map for the post-v1.2.0 setup: agent-orch owns state AND process;
+Personal map for the post-v1.2.0 setup: handoff owns state AND process;
 everything else is a domain tool it calls. superpowers + mattpocock are
-**disabled** — their value was forked into agent-orch's skills (see
+**disabled** — their value was forked into handoff's skills (see
 ATTRIBUTION.md). Don't re-enable them; that reintroduces competing sequencers.
 
 ## Three layers (updated)
 
-- **State** — agent-orch memory (`.agent-orch/`: STATUS, RULES, CONTEXT.md,
+- **State** — handoff memory (`.handoff/`: STATUS, RULES, CONTEXT.md,
   tasks, LEARNINGS). Automatic via hooks.
-- **Process** — agent-orch `workflow` + its technique skills. Mine, owned,
+- **Process** — handoff `workflow` + its technique skills. Mine, owned,
   tier-driven. `workflow` alone decides sequencing and how much ceremony a
   task gets.
 - **Domain / services** — frontend-design, cloudflare, supabase, dataviz,
@@ -30,41 +30,41 @@ If heavy process lands on a light task: say "this is T1". That ruling stands.
 
 ## The pipeline, phase by phase
 
-1. **Brief** — `agent-orch:brief`. Questions one at a time, code cited
+1. **Brief** — `handoff:brief`. Questions one at a time, code cited
    `path:line`, my approval on the spec.
-2. **Plan** — `agent-orch:plan` (T2/T3). Premise challenged first; spikes for
-   unknowns; `agent-orch:design` when interfaces/seams are the question.
-3. **Build** — inline by default. `agent-orch:tdd` (T3 mandatory).
-   `agent-orch:delegate` ONLY for context-flooding work or true parallelism.
-   `frontend-design` for UI. Bug → `agent-orch:debug`; 3+ failed fixes →
-   `agent-orch:architecture`.
+2. **Plan** — `handoff:plan` (T2/T3). Premise challenged first; spikes for
+   unknowns; `handoff:design` when interfaces/seams are the question.
+3. **Build** — inline by default. `handoff:tdd` (T3 mandatory).
+   `handoff:delegate` ONLY for context-flooding work or true parallelism.
+   `frontend-design` for UI. Bug → `handoff:debug`; 3+ failed fixes →
+   `handoff:architecture`.
 4. **Verify** — typecheck/lint/tests/build, then `/code-review` (T2+),
    built-in `verify`/`run` to drive the app, `simplify` once green,
-   `agent-orch:browser-qa` for real-browser QA, `agent-orch:security` +
-   `/security-review` (T3). Gate: `agent-orch:verify-done` — evidence I can
+   `handoff:browser-qa` for real-browser QA, `handoff:security` +
+   `/security-review` (T3). Gate: `handoff:verify-done` — evidence I can
    judge, including the Spec check (is it what I asked?).
-5. **Ship** — `agent-orch:ship`. Branch → PR → merge → deploy (knows wrangler /
+5. **Ship** — `handoff:ship`. Branch → PR → merge → deploy (knows wrangler /
    Vercel / Convex-before-frontend / Supabase migrations) → smoke check. T3:
    launch runbook with rollback criteria set BEFORE deploying.
-6. **Learn** — `agent-orch:learn` (T3/incidents only). CHANGELOG + LEARNINGS.md;
+6. **Learn** — `handoff:learn` (T3/incidents only). CHANGELOG + LEARNINGS.md;
    RULES.md only when I explicitly accept a new rule.
 
 ## When X happens, reach for Y
 
 | Situation | Reach for |
 |---|---|
-| Something's broken / test fails | `agent-orch:debug` — no fixes before root cause |
-| 3+ fixes failed | `agent-orch:architecture` |
-| "Is it actually done?" | `agent-orch:verify-done` |
-| Deploy / release / go live | `agent-orch:ship` |
-| Codebase feels painful | `agent-orch:architecture` (proactive scan) |
-| QA the site in a browser | `agent-orch:browser-qa` |
-| Full security audit | `agent-orch:security` (diff-only: `/security-review`) |
-| Search/build would flood context | `agent-orch:delegate` |
-| New repo (mine or client) | `agent-orch:setup`, then `setup-pre-commit` + `git-guardrails-claude-code` (one-time hardening) |
+| Something's broken / test fails | `handoff:debug` — no fixes before root cause |
+| 3+ fixes failed | `handoff:architecture` |
+| "Is it actually done?" | `handoff:verify-done` |
+| Deploy / release / go live | `handoff:ship` |
+| Codebase feels painful | `handoff:architecture` (proactive scan) |
+| QA the site in a browser | `handoff:browser-qa` |
+| Full security audit | `handoff:security` (diff-only: `/security-review`) |
+| Search/build would flood context | `handoff:delegate` |
+| New repo (mine or client) | `handoff:setup`, then `setup-pre-commit` + `git-guardrails-claude-code` (one-time hardening) |
 | Watch a deploy / recurring check | `/loop` (self-paced) — or `schedule` if unattended |
 | Grind the backlog / drive work to done | `/goal` with a measurable condition (tiers still gate T3) |
-| Nightly client-site QA | `schedule` + `agent-orch:browser-qa` |
+| Nightly client-site QA | `schedule` + `handoff:browser-qa` |
 | Merge conflict mid-ship | `resolving-merge-conflicts` |
 
 ## Time operators — goal, loop, schedule (built-in)
@@ -99,8 +99,8 @@ Never let "empty the backlog" self-approve money/auth/data work.
   bug in the skill — fix the skill, don't obey it.
 - **Evidence over claims.** I judge demos, test output, and preview URLs —
   never "the code looks right".
-- **One of each spine:** one task system (`.agent-orch/tasks/`), one meaning
-  for `CONTEXT.md`, one learnings file (`.agent-orch/context/LEARNINGS.md`).
+- **One of each spine:** one task system (`.handoff/tasks/`), one meaning
+  for `CONTEXT.md`, one learnings file (`.handoff/context/LEARNINGS.md`).
 - **Versions ship via git push** — the marketplace reads GitHub, not the local
   clone. Bump both manifests, commit, PUSH, then `/plugin marketplace update`.
 - **Keep STATUS.md ≤ 25 lines.** It's injected every session; drift here is

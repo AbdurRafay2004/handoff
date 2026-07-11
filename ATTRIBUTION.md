@@ -2,7 +2,7 @@
 
 Several skills in `skills/` are adapted from MIT-licensed works. Orchestration
 and cross-pack workflow directives were removed and content was restructured to
-fit the agent-orch workflow (see `skills/workflow/SKILL.md`); the engineering
+fit the handoff workflow (see `skills/workflow/SKILL.md`); the engineering
 substance derives from the originals. Per the MIT license, the original
 copyright notices are reproduced below.
 
@@ -20,7 +20,8 @@ Adapted in: `skills/brief/` (brainstorming), `skills/plan/` (writing-plans),
 
 Source: https://github.com/mattpocock/skills (MIT License)
 
-Adapted in: `skills/brief/` (grilling), `skills/plan/` (prototype, to-issues),
+Adapted in: `skills/brief/` (grilling), `skills/grill-me/` (grilling, verbatim),
+`skills/plan/` (prototype, to-issues),
 `skills/tdd/` (tdd, mocking/tests references), `skills/debug/`
 (diagnosing-bugs), `skills/design/` (codebase-design, domain-modeling,
 deepening reference), `skills/architecture/` (improve-codebase-architecture),

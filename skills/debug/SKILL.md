@@ -19,7 +19,7 @@ cause (the process is fast for simple bugs).
 
 ## Phase 0 — Read the local context
 
-Before exploring, read the nearest `CONTEXT.md` and `.agent-orch/` state if they
+Before exploring, read the nearest `CONTEXT.md` and `.handoff/` state if they
 exist — a correct mental model of the modules involved beats an hour of tracing.
 
 ## Phase 1 — Build a feedback loop
@@ -178,7 +178,7 @@ Evidence:   red → green output proving it
 ```
 
 Then ask: **what would have prevented this bug?** If the answer is
-architectural, note it in `.agent-orch/` state or the backlog — after the fix
+architectural, note it in `.handoff/` state or the backlog — after the fix
 is in, when you know the most.
 
 ## Red flags — stop and return to Phase 1

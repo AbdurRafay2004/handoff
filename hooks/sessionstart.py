@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """SessionStart hook.
 
-If the project has .agent-orch/  -> inject STATUS (full) + RULES (full) + a
+If the project has .handoff/  -> inject STATUS (full) + RULES (full) + a
 one-line pointer to the on-demand docs (BOOT/MAP/context/tasks).
 
 If it does NOT -> inject a one-time, self-suppressing nudge to run setup, then
@@ -12,17 +12,17 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _common import (  # noqa: E402
-    read_stdin_json, project_root, agent_base, has_agent_orch, read_file,
+    read_stdin_json, project_root, agent_base, has_handoff, read_file,
     data_dir, marker_seen, marker_set, emit, _short,
     git_status_codes, git_head, save_baseline, plugin_version,
 )
 
 POINTER = (
-    "\n\n----- agent-orch pointer -----\n"
+    "\n\n----- handoff pointer -----\n"
     "RULES + STATUS above are auto-loaded. Read on demand only when the task needs it:\n"
-    "  .agent-orch/BOOT.md (session procedure + end-of-session updates),\n"
-    "  .agent-orch/MAP.md, .agent-orch/context/PRODUCT.md, .agent-orch/context/TECH_STACK.md,\n"
-    "  .agent-orch/tasks/ (durable backlog), .agent-orch/CHANGELOG.md, and any <dir>/CONTEXT.md.\n"
+    "  .handoff/BOOT.md (session procedure + end-of-session updates),\n"
+    "  .handoff/MAP.md, .handoff/context/PRODUCT.md, .handoff/context/TECH_STACK.md,\n"
+    "  .handoff/tasks/ (durable backlog), .handoff/CHANGELOG.md, and any <dir>/CONTEXT.md.\n"
     "Update STATUS.md + CHANGELOG.md whenever code or configuration changes — "
     "BEFORE committing, so state rides in the same commit as the change."
 )
@@ -32,7 +32,7 @@ def main():
     payload = read_stdin_json()
     root = project_root(payload)
 
-    if has_agent_orch(root):
+    if has_handoff(root):
         # Capture the git baseline (HEAD sha + dirty paths with codes) so the
         # Stop hook can nudge about ALL changes made during this session —
         # committed or not — while ignoring pre-existing uncommitted dirt.
@@ -45,7 +45,7 @@ def main():
         for name in ("STATUS.md", "RULES.md"):
             body = read_file(os.path.join(base, name))
             if body:
-                parts.append("===== .agent-orch/{} =====\n{}".format(name, body))
+                parts.append("===== .handoff/{} =====\n{}".format(name, body))
         if not parts:
             sys.exit(0)
 
@@ -57,21 +57,21 @@ def main():
         if pv:
             installed = read_file(os.path.join(base, "VERSION"))
             if installed and installed.strip() != pv:
-                drift = ("\n\nagent-orch: this repo's .agent-orch tree is stamped v{} "
+                drift = ("\n\nhandoff: this repo's .handoff tree is stamped v{} "
                          "but the plugin is v{} — templates/hook expectations may have "
                          "drifted; consider a refresh (setup skill) and update "
-                         ".agent-orch/VERSION.".format(installed.strip(), pv))
+                         ".handoff/VERSION.".format(installed.strip(), pv))
             elif not installed:
                 vmarker = os.path.join(data_dir(), "nover-" + _short(os.path.abspath(root)))
                 if not marker_seen(vmarker):
                     marker_set(vmarker)
-                    drift = ("\n\nagent-orch: this repo's .agent-orch has no VERSION stamp "
+                    drift = ("\n\nhandoff: this repo's .handoff has no VERSION stamp "
                              "(predates v1.4). Write the plugin version to "
-                             ".agent-orch/VERSION to enable template-drift detection. "
+                             ".handoff/VERSION to enable template-drift detection. "
                              "This tip shows only once for this repo.")
 
         context = (
-            "Project context auto-loaded from .agent-orch (read before acting):\n\n"
+            "Project context auto-loaded from .handoff (read before acting):\n\n"
             + "\n\n".join(parts)
             + POINTER
             + drift
@@ -79,16 +79,16 @@ def main():
         emit("SessionStart", context)
         return
 
-    # No .agent-orch — nudge once per repo, then stay silent forever.
+    # No .handoff — nudge once per repo, then stay silent forever.
     marker = os.path.join(data_dir(), "seen-" + _short(os.path.abspath(root)))
     if marker_seen(marker):
         sys.exit(0)
     marker_set(marker)
     emit(
         "SessionStart",
-        "This repo has no agent-orch project memory. To enable durable STATUS, "
+        "This repo has no handoff project memory. To enable durable STATUS, "
         "RULES, MAP, a task backlog, and folder-level CONTEXT.md, run the "
-        "agent-orch setup skill (say \"set up agent-orch\" or /agent-orch:setup). "
+        "handoff setup skill (say \"set up handoff\" or /handoff:setup). "
         "This tip shows only once for this repo.",
     )
 

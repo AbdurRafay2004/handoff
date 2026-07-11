@@ -91,7 +91,7 @@ def main():
     if stray:
         emit(
             "PreToolUse",
-            "agent-orch: `{}` is being written to `.agent-orch/tasks/` ROOT. Task "
+            "handoff: `{}` is being written to `.handoff/tasks/` ROOT. Task "
             "files live in a status folder — write it to `tasks/inbox/` (new), "
             "`tasks/now/` (active), or `tasks/done/` (closed) instead, with the "
             "frontmatter `status` matching the folder. Only WORKFLOW.md and "

@@ -51,7 +51,7 @@ it in one line ("this is T1") and that ruling stands.
    live result, tier-scaled up to a full launch runbook. Never `git add -A`;
    stage only what you changed. Every commit revertible.
 6. **Learn** — skill: `learn` (T3 and incidents; T1/T2 need only a CHANGELOG
-   line). Update durable state (STATUS/CHANGELOG via agent-orch), record
+   line). Update durable state (STATUS/CHANGELOG via handoff), record
    learnings, plus one line: what would have prevented this?
 
 ## Delegation (subagents)
@@ -70,7 +70,7 @@ sequential, or interdependent edits stay inline without asking.
 ## The T3 gate is machine-readable
 
 When stopping at a T3 gate (plan approval, ship approval), WRITE
-`.agent-orch/GATE` — one line: the task and the question awaiting the user
+`.handoff/GATE` — one line: the task and the question awaiting the user
 (e.g. `T3 plan approval: migrate orders table — approve?`). While that file
 exists, do not proceed past the gate, regardless of any active goal, loop, or
 "just ship it" pressure — autonomous drivers idle here. Delete the file when
