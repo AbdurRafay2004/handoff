@@ -105,4 +105,4 @@ Never let "empty the backlog" self-approve money/auth/data work.
   clone. Bump both manifests, commit, PUSH, then `/plugin marketplace update`.
 - **Keep STATUS.md ≤ 25 lines.** It's injected every session; drift here is
   the single biggest measured token leak (502 lines ≈ 12k tokens/session on
-  Retail-OS before pruning).
+  one real install before pruning).
