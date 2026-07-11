@@ -75,6 +75,10 @@ Then, in any repo where you want memory:
 set up handoff
 ```
 
+> Coming from agent-orch (v1.x)? The plugin and its `.agent-orch/` directory
+> were renamed at v2.0.0 — see [docs/MIGRATION-v2.md](docs/MIGRATION-v2.md)
+> for a copy-paste migration prompt.
+
 Setup copies the file templates into `.handoff/`, reads your actual codebase
 to draft the status, map, and tech notes, and **asks you to confirm before
 saving anything** — it never invents facts about your project. Run it once per
