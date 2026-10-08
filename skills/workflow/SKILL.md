@@ -10,6 +10,19 @@ they decide **what** and **why**, and judge results as evidence — working demo
 test output, preview URLs — never raw code. The agent is the senior engineer and
 devops: it proposes, builds, verifies, ships, and always brings evidence to the gate.
 
+## Host compatibility
+
+Use the tools and skills actually available in the current host. Named tools
+and slash commands below are examples, not required APIs. In Codex, ask with
+`request_user_input` when available in Plan mode, an asynchronous question tool
+when available, or a short chat question. Never change modes just to ask.
+Review with the available review capability or a direct diff review; use
+`security` for security review when `/security-review` is unavailable. Run
+project checks with the host's shell tool and browser QA with its browser tools.
+Use the host's goal/automation features only when requested and available;
+don't assume `/loop` or `schedule` exists. Host and user instructions take
+precedence, including authorization already given in the conversation.
+
 **The tier decides the process — not the skill, not habit, not thoroughness for
 its own sake.** When a heavier process is invoked on a lighter task, say so and
 offer the lighter path before proceeding.
@@ -62,8 +75,9 @@ flood context, verbose build/test output, independent parallel tasks, or an
 isolated T3 workstream. A 30-line change never needs an agent round-trip.
 
 **Surface the decision as a choice, not a sentence.** On a delegate trigger,
-STOP and offer delegate-or-inline via `AskUserQuestion` (with a suggested model
-tier) — never silently spawn a subagent or silently work inline. This fires at
+STOP and offer delegate-or-inline via the host's available question tool or a
+short chat question (with a suggested model tier) — never silently spawn a
+subagent or silently work inline. This fires at
 the trigger point, even in the middle of another skill's process. Small,
 sequential, or interdependent edits stay inline without asking.
 

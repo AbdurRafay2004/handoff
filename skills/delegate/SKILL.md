@@ -23,7 +23,8 @@ cost only when it buys something.
 4. **Isolated large workstream (T3):** big enough that a fresh, focused
    context outperforms a crowded one.
 
-When a trigger fires, **stop and call `AskUserQuestion`**: name the task, why it
+When a trigger fires, **stop and ask with the host's available question tool
+or a short chat question** (`AskUserQuestion` in Claude Code): name the task, why it
 triggered, a suggested model tier, and delegate-or-inline as options. Never
 decide silently in either direction. This applies at the trigger point, whenever
 it fires — including in the middle of another skill's process. (Doesn't apply to

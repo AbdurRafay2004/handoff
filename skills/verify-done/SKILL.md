@@ -61,7 +61,7 @@ separate axes:
   by line and report: (a) requirements missing or partial, (b) behavior nobody
   asked for (scope creep), (c) requirements that look implemented but wrong.
 - **Standards axis** — does the code follow this repo's conventions
-  (CLAUDE.md, folder CONTEXT.md, documented standards)?
+  (AGENTS.md/CLAUDE.md, folder CONTEXT.md, documented standards)?
 
 Report the axes separately and **never rerank across them**: passing tests
 cannot excuse a missed requirement, and a faithful diff cannot excuse a

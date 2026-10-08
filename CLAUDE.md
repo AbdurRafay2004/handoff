@@ -1,10 +1,11 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file records shared contributor guidance. Claude Code reads it directly;
+Codex is pointed here by `AGENTS.md`.
 
 ## What this repo is
 
-This repo **is a Claude Code plugin** named `handoff`. It is not an application.
+This repo **is a Claude Code and local Codex plugin** named `handoff`. It is not an application.
 It ships a hook-driven **project-memory** system plus an owned **development
 workflow layer** that other repos install. There is no build step and no
 dependency tree — the deliverable is Python hook scripts (stdlib only), a skill
@@ -23,8 +24,8 @@ cross-skill process handoffs — `workflow` alone decides sequencing and tiering
 
 Do not confuse the two layers:
 
-- **The plugin** (`hooks/`, `skills/`, `.claude-plugin/`) — what a developer installs
-  into their Claude Code. Editing here changes behavior for every repo that uses it.
+- **The plugin** (`hooks/`, `skills/`, `.claude-plugin/`, `.codex-plugin/`) — what a developer
+  installs into Claude Code or local Codex. Editing here changes behavior for every repo that uses it.
 - **The `templates/` tree** — the *payload* the `setup` skill copies into a target
   repo as `.handoff/`. This is committed to the target repo so memory travels with
   the code. Editing here changes what newly-set-up repos get; it does **not** affect
@@ -44,11 +45,13 @@ imports shared logic from `hooks/_common.py`:
   (template-drift nag; missing stamp nags once per repo). If no `.handoff/`, emits a
   **one-time** "run setup" tip per repo (marker file in `~/.cache/handoff/`) and stays
   silent forever after.
-- **`pre_edit_context.py`** (PreToolUse: Edit/Write/MultiEdit/NotebookEdit) — walks up
+- **`pre_edit_context.py`** (PreToolUse: Edit/Write/MultiEdit/NotebookEdit/apply_patch) — walks up
   from the file being edited to find the nearest `CONTEXT.md` and injects it once per
   session; also corrects task files about to be written to the `tasks/` ROOT (they
   belong in `inbox|now|done`). Injects `additionalContext` **only** — never a
   `permissionDecision` — so it can't silently auto-approve edits.
+  Codex supplies patch text in `tool_input.command`; every add/update/delete/move
+  header is considered, with patch paths resolved against the hook's `cwd`.
 - **`stop.py`** (Stop) — nudges when the session made new repo changes (**committed or
   uncommitted** — session-changed = commits since baseline HEAD + dirty paths whose
   code changed) but didn't update durable state: `STATUS.md` / `CHANGELOG.md` /
@@ -59,6 +62,13 @@ imports shared logic from `hooks/_common.py`:
   `.handoff/GATE` (machine-readable T3 stall). The nudge instructs that state
   updates ride in the SAME commit as the code (amend only if unpushed AND the last
   commit is this session's own work).
+  Stop emits `decision: block` plus `reason`, the supported continuation response
+  for both hosts. Context-only `hookSpecificOutput` is for SessionStart/PreToolUse.
+
+Without `CLAUDE_PROJECT_DIR`, root discovery uses git from the hook's `cwd`;
+without git, it looks for an ancestor `.handoff/`. Codex's native `PLUGIN_DATA`
+is preferred for persistent markers, with the Claude alias as fallback. Codex
+also sets `CLAUDE_PLUGIN_ROOT`, so the shared registered commands work in both.
 
 The push/pull principle behind all of it: always-relevant state (STATUS+RULES) is
 **pushed** every session; everything else (`BOOT.md`, `MAP.md`, `context/*`, `tasks/`,
@@ -79,8 +89,9 @@ regressions against them.
    same unresolved nudge). Removing one risks an infinite Stop-continuation loop.
 4. **PreToolUse injects context only, no permission decision.**
 5. **Path safety in `pre_edit_context.py`:** edits outside the project root are ignored,
-   relative paths resolve against the project root (not the hook's cwd), and the walk-up
-   stops at the root. Preserve these checks (commit d6810e4).
+   Claude relative file paths resolve against the project root; Codex patch paths
+   resolve against `cwd`. Resolve symlinks before checking the boundary, and stop
+   the walk-up at the root. Preserve these checks (original fix: commit d6810e4).
 6. **Changes under `.handoff/` are excluded** from the Stop hook's "new work" set, so
    updating state doesn't itself trigger a nudge.
 
@@ -89,7 +100,7 @@ regressions against them.
 Run `python3 tests/test_hooks.py` — the same stdlib smoke suite CI runs (fixture
 repos piped through all three hooks, including the fail-safe garbage-stdin
 checks). Hooks are plain `python3` reading a JSON payload on stdin and emitting
-a JSON `hookSpecificOutput` on stdout. Poke one by hand by piping a payload:
+JSON context or a Stop continuation response on stdout. Poke one by hand by piping a payload:
 
 ```sh
 # SessionStart against a target repo that has .handoff/
@@ -116,13 +127,16 @@ Keep hooks **stdlib-only** — no third-party imports. `templates/` is markdown 
 `/handoff:setup`). Its contract: copy `templates/` → `.handoff/`, read the real
 codebase to *draft* STATUS/MAP/TECH_STACK/PRODUCT, **confirm with the user before saving**
 (never invent project facts — RULES rule 5), optionally seed folder `CONTEXT.md`, and
-append a thin-fallback block to the target repo's `CLAUDE.md` (for clones opened without
-the plugin). It must refuse to overwrite an existing `.handoff/` (offer refresh instead).
+append a thin-fallback block to the target repo's host instruction file (`CLAUDE.md`
+for Claude, `AGENTS.md` for Codex). Preserve both files if present and keep their
+handoff blocks consistent. It must refuse to overwrite an existing `.handoff/`
+(offer refresh instead). Codex setup must explain hook trust and cloud limitations.
 
 ## Releasing
 
-`.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` both carry the version —
-**bump both together** (never hardcode the current number in docs; check the manifests).
+`.claude-plugin/plugin.json`, `.codex-plugin/plugin.json`, and
+`.claude-plugin/marketplace.json` carry the version — **bump all three together**
+(never hardcode the current number in docs; check the manifests).
 Release-bump commit subjects follow `type: summary (vX.Y.Z)`; non-release commits omit
 the version suffix. The marketplace registration reads GitHub, not the local clone —
 a release is only live after `git push`.
@@ -134,3 +148,4 @@ a release is only live after `git push`.
   non-git repos disable the Stop nudge).
 - `docs/SKILL-WORKFLOW.md` — how handoff (the state/context layer) composes with other
   skill families rather than replacing them.
+- `docs/CODEX.md` — Codex installation, hook contracts, trust, and host limitations.

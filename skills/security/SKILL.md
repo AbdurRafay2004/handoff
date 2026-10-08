@@ -1,15 +1,17 @@
 ---
 name: security
-description: Use for a full security audit — T3 verify gate (money, auth, user data, migrations), pre-launch check, or when the user asks to audit the codebase for vulnerabilities. Whole-repo depth — for quick diff-scoped checks of pending changes, use the built-in /security-review instead.
+description: Use for a full security audit — T3 verify gate (money, auth, user data, migrations), pre-launch check, or when the user asks to audit the codebase for vulnerabilities. For quick diff-scoped checks, prefer a host-provided security reviewer when available, otherwise apply this skill to the diff.
 ---
 
 # Security Audit
 
 Part of the **Verify** phase — see the `workflow` skill for tiers and sequencing.
 
-Claude Code's built-in `/security-review` covers diff-scoped checks of pending
+Claude Code's built-in `/security-review`, when available, covers diff-scoped checks of pending
 changes; this skill is the deeper whole-repo audit — run it at the T3 verify
 gate, before launch, or on a schedule. Don't duplicate the built-in for diffs.
+In Codex or another host without that command, use this skill for a security
+review and scope it to the diff when only pending changes need checking.
 
 You are a **Chief Security Officer** who has led incident response on real
 breaches. You think like an attacker but report like a defender. No security
@@ -67,7 +69,7 @@ a Python service nested in `ml/` still gets basic coverage.
 - **Cloudflare/Vercel:** secrets belong in `wrangler secret` / Vercel env
   settings, not in committed `wrangler.toml` `[vars]` or `vercel.json`.
 
-**Mental model:** read CLAUDE.md/README/key configs; map components, trust
+**Mental model:** read AGENTS.md/CLAUDE.md/README/key configs; map components, trust
 boundaries, and data flow (where does user input enter, exit, transform?);
 note invariants the code relies on. Output a brief architecture summary —
 understanding, not findings.

@@ -5,6 +5,12 @@ everything else is a domain tool it calls. superpowers + mattpocock are
 **disabled** — their value was forked into handoff's skills (see
 ATTRIBUTION.md). Don't re-enable them; that reintroduces competing sequencers.
 
+This map applies in Claude Code and local Codex. Named slash commands are
+host-specific examples: use an available review/browser/automation capability,
+or direct review and project commands when a named built-in is absent. In Codex,
+use its goal and automation tools only when requested. See [CODEX.md](CODEX.md)
+for hook setup and limitations.
+
 ## Three layers (updated)
 
 - **State** — handoff memory (`.handoff/`: STATUS, RULES, CONTEXT.md,
@@ -101,8 +107,9 @@ Never let "empty the backlog" self-approve money/auth/data work.
   never "the code looks right".
 - **One of each spine:** one task system (`.handoff/tasks/`), one meaning
   for `CONTEXT.md`, one learnings file (`.handoff/context/LEARNINGS.md`).
-- **Versions ship via git push** — the marketplace reads GitHub, not the local
-  clone. Bump both manifests, commit, PUSH, then `/plugin marketplace update`.
+- **Versions ship via git push** — a GitHub marketplace reads GitHub, not the local
+  clone. Bump both host manifests and the marketplace version, commit, PUSH,
+  then refresh the marketplace with the current host's plugin management UI/CLI.
 - **Keep STATUS.md ≤ 25 lines.** It's injected every session; drift here is
   the single biggest measured token leak (502 lines ≈ 12k tokens/session on
   one real install before pruning).

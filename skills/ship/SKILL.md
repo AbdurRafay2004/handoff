@@ -133,7 +133,7 @@ Rollback: `wrangler rollback` (Workers) or re-deploy the previous version.
 commands, account/project, and environment you're about to hit, and confirm with
 the user before running anything. Then record the confirmed setup (platform,
 commands, prod URL, staging URL if any) in `.handoff/context/DEPLOY.md` (or
-the repo's CLAUDE.md if no `.handoff/`) — and fingerprint it: on later ships,
+the repo's AGENTS.md/CLAUDE.md if no `.handoff/`) — and fingerprint it: on later ships,
 if the deploy config files or CI deploy workflows changed since that record,
 re-confirm instead of assuming the old understanding still holds.
 

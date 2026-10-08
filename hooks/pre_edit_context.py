@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""PreToolUse hook (Edit/Write/MultiEdit/NotebookEdit).
+"""PreToolUse hook (Claude file tools and Codex apply_patch).
 
 When the file about to be edited lives inside (or under) a folder that has a
 CONTEXT.md, inject that nearest CONTEXT.md so the agent reads local architecture
@@ -20,12 +20,45 @@ from _common import (  # noqa: E402
 TASKS_ROOT_ALLOWED = ("WORKFLOW.md", "TEMPLATE.md")
 
 
+def edited_paths(payload, root):
+    """Claude paths are root-relative; Codex patch paths are cwd-relative.
+
+    Only parse apply_patch's file headers, never shell commands or hunk text.
+    Include both sides of moves, and every file in a multi-file patch.
+    """
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return []
+    if payload.get("tool_name") != "apply_patch":
+        path = tool_input.get("file_path") or tool_input.get("notebook_path")
+        return [path] if isinstance(path, str) and path else []
+    patch = tool_input.get("command")
+    if not isinstance(patch, str):
+        return []
+    lines = patch.strip().splitlines()
+    if not lines or lines[0] != "*** Begin Patch" or lines[-1] != "*** End Patch":
+        return []
+    cwd = os.path.abspath(payload.get("cwd") or root)
+    paths = []
+    for line in lines[1:-1]:
+        for prefix in ("*** Add File: ", "*** Update File: ",
+                       "*** Delete File: ", "*** Move to: "):
+            if line.startswith(prefix):
+                path = line[len(prefix):]
+                if path:
+                    path = os.path.abspath(os.path.join(cwd, path))
+                    if path not in paths:
+                        paths.append(path)
+                break
+    return paths
+
+
 def misfiled_task_write(file_path, root):
     """Name of a task .md about to be written to tasks/ ROOT (not a subfolder), or None."""
     try:
-        root_abs = os.path.abspath(root)
+        root_abs = os.path.realpath(root)
         fp = file_path if os.path.isabs(file_path) else os.path.join(root_abs, file_path)
-        fp = os.path.abspath(fp)
+        fp = os.path.realpath(fp)
         tasks_root = os.path.normpath(os.path.join(root_abs, AGENT_DIR, "tasks"))
         if os.path.normpath(os.path.dirname(fp)) != tasks_root:
             return None
@@ -44,10 +77,10 @@ def nearest_context_md(file_path, root):
     against the root (not the hook's cwd).
     """
     try:
-        root_abs = os.path.abspath(root)
+        root_abs = os.path.realpath(root)
         if not os.path.isabs(file_path):
             file_path = os.path.join(root_abs, file_path)
-        fp = os.path.abspath(file_path)
+        fp = os.path.realpath(file_path)
         # Ignore edits outside the project root (e.g. /tmp, $HOME).
         try:
             if os.path.commonpath([fp, root_abs]) != root_abs:
@@ -77,50 +110,45 @@ def nearest_context_md(file_path, root):
 
 def main():
     payload = read_stdin_json()
+    if not payload:
+        return
     root = project_root(payload)
-    tool_input = payload.get("tool_input") or {}
-    file_path = tool_input.get("file_path") or tool_input.get("notebook_path")
-    if not file_path:
-        sys.exit(0)
+    paths = edited_paths(payload, root)
+    parts = []
 
     # Task files belong in inbox/now/done — catch a root-level write before it
     # lands. Corrected on EVERY attempt: the injection doesn't block the write,
     # and after a /compact the earlier correction is gone from context, so a
     # once-per-session cap would let repeat writes land unchallenged.
-    stray = misfiled_task_write(file_path, root)
-    if stray:
-        emit(
-            "PreToolUse",
-            "handoff: `{}` is being written to `.handoff/tasks/` ROOT. Task "
-            "files live in a status folder — write it to `tasks/inbox/` (new), "
-            "`tasks/now/` (active), or `tasks/done/` (closed) instead, with the "
-            "frontmatter `status` matching the folder. Only WORKFLOW.md and "
-            "TEMPLATE.md live at the tasks/ root.".format(stray),
-        )
-        return
-
-    ctx_path = nearest_context_md(file_path, root)
-    if not ctx_path:
-        sys.exit(0)
-
-    # Once per CONTEXT.md per session.
     sdir = session_marker_dir(payload.get("session_id"))
-    marker = os.path.join(sdir, "ctx-" + _short(os.path.abspath(ctx_path)))
-    if marker_seen(marker):
-        sys.exit(0)
-
-    body = read_file(ctx_path)
-    if not body:
-        sys.exit(0)
-    marker_set(marker)
-
-    rel = os.path.relpath(os.path.dirname(ctx_path), os.path.abspath(root))
-    emit(
-        "PreToolUse",
-        "Local context for `{}/` (read before editing here) — from {}:\n\n{}".format(
-            rel, os.path.relpath(ctx_path, os.path.abspath(root)), body
-        ),
-    )
+    for file_path in paths:
+        stray = misfiled_task_write(file_path, root)
+        if stray:
+            parts.append(
+                "handoff: `{}` is being written to `.handoff/tasks/` ROOT. Task "
+                "files live in a status folder — write it to `tasks/inbox/` (new), "
+                "`tasks/now/` (active), or `tasks/done/` (closed) instead, with the "
+                "frontmatter `status` matching the folder. Only WORKFLOW.md and "
+                "TEMPLATE.md live at the tasks/ root.".format(stray)
+            )
+        ctx_path = nearest_context_md(file_path, root)
+        if not ctx_path:
+            continue
+        # Once per CONTEXT.md per session, including within a multi-file patch.
+        marker = os.path.join(sdir, "ctx-" + _short(os.path.abspath(ctx_path)))
+        if marker_seen(marker):
+            continue
+        body = read_file(ctx_path)
+        if not body:
+            continue
+        marker_set(marker)
+        rel = os.path.relpath(os.path.dirname(ctx_path), os.path.abspath(root))
+        parts.append(
+            "Local context for `{}/` (read before editing here) — from {}:\n\n{}".format(
+                rel, os.path.relpath(ctx_path, os.path.abspath(root)), body
+            )
+        )
+    emit("PreToolUse", "\n\n".join(parts))
 
 
 if __name__ == "__main__":

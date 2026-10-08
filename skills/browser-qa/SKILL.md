@@ -50,6 +50,11 @@ to do? Verify it does that, not just that pages load.
 `run` knows how to launch this project's app; `verify` drives a changed flow end-to-end.
 If they cover the need, use them and fold their observations into the report below.
 
+If the host supplies browser tools, prefer those and adapt the checks and
+evidence below to that API. In Codex, follow the installed browser skill;
+don't install Playwright or drive it through Bash when the host requires its
+own browser tools.
+
 Otherwise, drive Chromium yourself via Playwright through Bash.
 
 **1. Get the app running.** Check common dev ports first — Next.js `:3000`,

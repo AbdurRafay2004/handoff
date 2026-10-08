@@ -30,6 +30,8 @@ POINTER = (
 
 def main():
     payload = read_stdin_json()
+    if not payload:
+        return
     root = project_root(payload)
 
     if has_handoff(root):

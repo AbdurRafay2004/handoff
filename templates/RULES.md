@@ -15,7 +15,8 @@ These ship with handoff and apply regardless of stack.
 5. Don't assume project behavior that isn't documented or visible in code.
 6. Ask before turning an unclear preference into a permanent rule.
 7. On a delegate trigger (broad search/mapping, verbose output, parallel or
-   isolated work), stop and ask delegate-or-inline via `AskUserQuestion` with a
+   isolated work), stop and ask delegate-or-inline via the host's available
+   question tool (or a short chat question) with a
    suggested model tier — never decide silently, even mid-skill. Small,
    sequential, or interdependent edits stay inline without asking. (See the
    `delegate` skill.)

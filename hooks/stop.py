@@ -16,7 +16,7 @@ prompted this design):
   2. session baseline  -> only consider changes NEW since SessionStart captured
                           the baseline (HEAD sha + dirty codes).
   3. nudge signature   -> never nudge twice for the same unresolved situation,
-                          even if (1) doesn't fire for additionalContext continuations.
+                          even if the host omits stop_hook_active.
 
 Only fires in repos that have .handoff/ and are git repos.
 """
@@ -101,6 +101,8 @@ def sentinel_hit(path, pats):
 
 def main():
     payload = read_stdin_json()
+    if not payload:
+        return
 
     # Loop-breaker 1: don't act while already continuing from a stop hook.
     if payload.get("stop_hook_active"):

@@ -25,6 +25,9 @@ SKILL-WORKFLOW.md, tasks/ with inbox/now/done). Keep the `.gitkeep` files.
 Do not edit RULES' universal section.
 Write the current plugin version into `.handoff/VERSION` (single line) — the
 SessionStart hook uses it for template-drift detection.
+Read the version from `.codex-plugin/plugin.json` in Codex or
+`.claude-plugin/plugin.json` in Claude Code; use the available manifest if only
+one is packaged.
 
 ## 2. Guided discovery (read the repo — do not guess)
 Read what actually exists, quietly:
@@ -56,12 +59,14 @@ domain module). Propose a short CONTEXT.md for each (structure, conventions,
 gotchas — not a file listing). Save only the ones the user approves. These are
 auto-injected by the PreToolUse hook on first edit in that folder.
 
-## 5. Thin-fallback CLAUDE.md
+## 5. Host-specific fallback instructions
 The plugin's hooks load full state when installed, but a clone opened WITHOUT
 the plugin needs a minimal fallback. In the project root:
-- If `CLAUDE.md` exists, append (don't duplicate) a short block. If it doesn't,
-  create one. Never create `AGENTS.md` if `CLAUDE.md` exists, or vice versa —
-  edit whichever is present.
+- In Codex, append the block to `AGENTS.md`; in Claude Code, use `CLAUDE.md`.
+  Create the host's file if absent, even if the other host's file exists:
+  Codex does not automatically read `CLAUDE.md`.
+- Preserve all existing instructions. If both files exist, keep the same
+  handoff block in both. Don't duplicate a block already present in a file.
 - The block:
 
 ```markdown
@@ -77,7 +82,15 @@ two first. Hard rules (always apply):
 ```
 
 ## 6. Finish
-Tell the user: setup is complete; the SessionStart hook will load STATUS+RULES
+In Codex, explain that plugin hooks must be reviewed and trusted before they
+run; use the host's hook review UI (`/hooks` in the CLI). Installing the plugin
+alone does not trust its hooks. If hooks are disabled, unavailable, or the
+conversation is cloud-orchestrated ChatGPT Work, the fallback instructions
+provide manual memory; don't promise automatic hooks there. See `docs/CODEX.md`
+at the plugin root.
+
+Tell the user: setup is complete; with hooks enabled and trusted,
+the SessionStart hook will load STATUS+RULES
 from the next session; the PreToolUse hook injects any folder's CONTEXT.md on
 edit; the Stop hook nudges state updates. They can edit `.handoff/*` directly
 anytime. Re-run this skill only to refresh discovery or start over.

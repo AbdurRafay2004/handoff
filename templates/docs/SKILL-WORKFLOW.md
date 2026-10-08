@@ -3,6 +3,12 @@
 How handoff skills compose: handoff owns state AND process. The workflow
 layer replaces any external process packs — one sequencer, no competing ones.
 
+Works with Claude Code and local Codex. Slash commands below are host-specific
+examples; use available review, browser, goal, and automation tools instead
+when those commands are absent. Invoke goals or schedules only when requested.
+Hooks must be enabled and trusted in Codex; without hooks, read STATUS and
+RULES manually from the host's instruction-file fallback.
+
 ## Three layers
 
 - **State** — handoff memory (`.handoff/`: STATUS, RULES, CONTEXT.md,

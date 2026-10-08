@@ -17,18 +17,39 @@ def read_stdin_json():
     """Parse the hook payload from stdin; return {} on any problem."""
     try:
         raw = sys.stdin.read()
-        return json.loads(raw) if raw.strip() else {}
+        payload = json.loads(raw) if raw.strip() else {}
+        return payload if isinstance(payload, dict) else {}
     except Exception:
         return {}
 
 
 def project_root(payload):
-    """Resolve the user's project root: CLAUDE_PROJECT_DIR, then stdin cwd, then getcwd."""
-    return (
-        os.environ.get("CLAUDE_PROJECT_DIR")
-        or payload.get("cwd")
-        or os.getcwd()
-    )
+    """Honor Claude's explicit root; otherwise find the repo from the hook cwd.
+
+    Codex supplies cwd, which can be a subdirectory. Git is the boundary (also
+    for worktrees/nested repos); without git, look for an ancestor .handoff/.
+    """
+    explicit = os.environ.get("CLAUDE_PROJECT_DIR")
+    if explicit:
+        return os.path.abspath(explicit)
+    cwd = os.path.abspath(payload.get("cwd") or os.getcwd())
+    try:
+        result = subprocess.run(
+            ["git", "-C", cwd, "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+    except Exception:
+        pass
+    candidate = cwd
+    while True:
+        if has_handoff(candidate):
+            return candidate
+        parent = os.path.dirname(candidate)
+        if parent == candidate:
+            return cwd
+        candidate = parent
 
 
 def agent_base(root):
@@ -49,8 +70,9 @@ def read_file(path):
 
 def data_dir():
     """A writable, persistent-ish directory for markers."""
-    base = os.environ.get("CLAUDE_PLUGIN_DATA") or os.path.join(
-        os.path.expanduser("~"), ".cache", "handoff"
+    base = (
+        os.environ.get("PLUGIN_DATA") or os.environ.get("CLAUDE_PLUGIN_DATA")
+        or os.path.join(os.path.expanduser("~"), ".cache", "handoff")
     )
     try:
         os.makedirs(base, exist_ok=True)
@@ -194,16 +216,16 @@ def git_local_commit_codes(root, base_sha, cap=50):
 
 def plugin_version():
     """The plugin's own manifest version, or None."""
-    try:
-        import json as _json
-        manifest = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-            ".claude-plugin", "plugin.json",
-        )
-        with open(manifest, encoding="utf-8") as fh:
-            return _json.load(fh).get("version")
-    except Exception:
-        return None
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    for directory in (".codex-plugin", ".claude-plugin"):
+        try:
+            with open(os.path.join(root, directory, "plugin.json"), encoding="utf-8") as fh:
+                version = json.load(fh).get("version")
+            if version:
+                return version
+        except Exception:
+            pass
+    return None
 
 
 def _session_file(session_id, name):
@@ -293,12 +315,19 @@ def signature(*parts):
 
 
 def emit(hook_event_name, additional_context):
-    """Print the standard non-blocking context-injection payload and exit 0."""
+    """Emit context, or a bounded Stop continuation, using both hosts' schema.
+
+    Stop does not accept hookSpecificOutput.additionalContext. Its documented
+    decision=block means continue the turn with reason, not deny a tool.
+    """
     if additional_context:
-        print(json.dumps({
-            "hookSpecificOutput": {
-                "hookEventName": hook_event_name,
-                "additionalContext": additional_context,
-            }
-        }))
+        if hook_event_name == "Stop":
+            print(json.dumps({"decision": "block", "reason": additional_context}))
+        else:
+            print(json.dumps({
+                "hookSpecificOutput": {
+                    "hookEventName": hook_event_name,
+                    "additionalContext": additional_context,
+                }
+            }))
     sys.exit(0)

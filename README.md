@@ -4,7 +4,7 @@
 
 ### Shift-change notes for your coding agent.
 
-**Claude Code forgets everything when a session ends. handoff is the note the
+**Coding sessions lose context. handoff is the note the
 last session leaves for the next one.**
 
 [![Version](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FAbdurRafay2004%2Fhandoff%2Fmain%2F.claude-plugin%2Fplugin.json&query=%24.version&label=version&color=blue)](https://github.com/AbdurRafay2004/handoff/blob/main/.claude-plugin/plugin.json)
@@ -12,7 +12,7 @@ last session leaves for the next one.**
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/AbdurRafay2004/handoff?style=flat&logo=github)](https://github.com/AbdurRafay2004/handoff/stargazers)
 
-A simple memory and workflow system for Claude Code.
+A simple memory and workflow system for Claude Code and local Codex.
 
 </div>
 
@@ -20,12 +20,12 @@ A simple memory and workflow system for Claude Code.
 
 ## The problem
 
-Every new Claude Code session starts from zero. It doesn't remember what you
+Every new coding-agent session needs to recover what you
 built yesterday, what you decided against, or which folder has the tricky code.
 
 The existing fixes have real downsides:
 
-- **A giant CLAUDE.md** — everything loads every session, whether you need it
+- **A giant CLAUDE.md / AGENTS.md** — everything loads every session, whether you need it
   or not. You pay for all of it, every time, and it keeps growing.
 - **Memory servers and databases** — another thing to install, run, and keep
   alive. Your project's memory lives outside your project.
@@ -69,7 +69,21 @@ Inside Claude Code:
 /plugin install handoff@handoff
 ```
 
-Then, in any repo where you want memory:
+Inside Codex (desktop or CLI, with local execution), use the same marketplace:
+
+```sh
+# Test a local checkout; replace the path with your clone
+codex plugin marketplace add /absolute/path/to/handoff
+codex plugin add handoff@handoff
+```
+
+For a published release, the marketplace source can instead be
+`AbdurRafay2004/handoff`. In the desktop app, install from that marketplace in
+Plugins. **Review and trust the plugin hooks** (`/hooks` in the CLI), then start
+a new chat. Updating a plugin's hook definition requires another trust review.
+See [Codex setup and compatibility](docs/CODEX.md) for details and limitations.
+
+Then, in any repo where you want memory, ask:
 
 ```
 set up handoff
@@ -159,7 +173,7 @@ A few small mechanisms that don't show up until they save you:
 - **Status bloat is policed.** `STATUS.md` loads every session, so it's a tax
   if it grows. Past 40 lines the agent gets told to prune it (target: 25).
 - **Clones without the plugin still work.** Setup writes a small fallback
-  block into your `CLAUDE.md`, so a teammate who hasn't installed handoff
+  block into your host's `CLAUDE.md` or `AGENTS.md`, so a teammate who hasn't installed handoff
   still gets the core rules and knows where the notes live.
 - **Stale installs get noticed.** Setup stamps `.handoff/VERSION`; when the
   plugin moves ahead of an install, you're told instead of drifting silently.
@@ -190,7 +204,8 @@ disable the original packs to avoid duplicate instructions.
 ## Honest limitations
 
 - Files edited through shell commands (`sed`, `cat >`) don't trigger the
-  folder-notes injection — only real Edit/Write tool calls do.
+  folder-notes injection. Claude file tools and Codex's native `apply_patch`
+  do, including all files in a patch and both sides of a move.
 - On very large repos, git commands in the hooks time out after 10 seconds;
   when that happens the affected check quietly skips that turn.
 - `/compact` resets the session's change tracking — work done before a
@@ -203,7 +218,9 @@ disable the original packs to avoid duplicate instructions.
   catches `migrations/`, misses cleverly-named danger.
 - Repos without git don't get the end-of-session reminder (it needs git to
   see what changed).
-- Only Claude Code for now.
+- Automatic hooks require Claude Code or a local Codex runtime with hooks
+  enabled and trusted. Cloud-orchestrated ChatGPT Work does not run bundled
+  plugin hooks; use the instructions in `AGENTS.md` to read memory manually.
 
 Every limitation fails quiet, never broken.
 
@@ -213,6 +230,9 @@ Every limitation fails quiet, never broken.
 # run the same tests CI runs
 python3 tests/test_hooks.py
 ```
+
+The suite covers Claude and Codex payloads, hook command registration,
+multi-file/move patches, subfolders/worktrees, path safety, and Stop cooldowns.
 
 No build step. Ground rules for contributions: hooks stay standard-library
 only, hooks stay fail-safe (silent exit on any error), and the `workflow`

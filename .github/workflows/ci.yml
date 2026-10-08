@@ -25,12 +25,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: plugin.json and marketplace.json carry the same version
+      - name: Claude, Codex, and marketplace manifests carry the same version
         run: |
           a=$(python3 -c "import json;print(json.load(open('.claude-plugin/plugin.json'))['version'])")
           b=$(python3 -c "import json;print(json.load(open('.claude-plugin/marketplace.json'))['plugins'][0]['version'])")
-          echo "plugin.json=$a marketplace.json=$b"
+          c=$(python3 -c "import json;print(json.load(open('.codex-plugin/plugin.json'))['version'])")
+          echo "claude=$a codex=$c marketplace=$b"
           test "$a" = "$b"
+          test "$a" = "$c"
 
   stdlib-only:
     name: Hooks are stdlib-only
