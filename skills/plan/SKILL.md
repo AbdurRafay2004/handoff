@@ -16,7 +16,8 @@ tasks. DRY. YAGNI. Test-first where the tier demands it. Frequent commits.
 
 - **T1:** skip this skill — no plan, just do the task.
 - **T2:** short plan as bullets in chat — files to touch, order of work,
-  verification step. No document.
+  verification step. Include the scope summary for the workflow's single
+  combined brief/plan review. No document or separate second approval.
 - **T3:** written plan file the user approves BEFORE build starts. Trade-offs
   stated in plain product language. Save to `docs/plans/YYYY-MM-DD-<feature>.md`
   (user preferences override).

@@ -98,6 +98,12 @@ to draft the status, map, and tech notes, and **asks you to confirm before
 saving anything** — it never invents facts about your project. Run it once per
 repo. After that, everything is automatic.
 
+After updating the plugin, refresh or reinstall it through your host and start
+a new chat. Existing `.handoff/` files are preserved, so template changes need
+a separate refresh. To adopt the writing guidance in an existing repo, ask the
+agent to merge the Communication section from the plugin's bundled
+`templates/RULES.md` into `.handoff/RULES.md`, preserving the other rules.
+
 ## What ends up in your repo
 
 ```
@@ -186,7 +192,7 @@ The core one, `workflow`, sorts every task into a tier:
 | Tier | Example | What the agent does |
 |---|---|---|
 | **T1** | fix a typo, tweak styling | just edits it, checks it compiles, done |
-| **T2** | a normal feature | short plan, build, test what changed, review |
+| **T2** | a normal feature | brief and short plan together, one approval, build, test what changed, review |
 | **T3** | money, auth, user data, migrations | written plan you approve, tests first, security review, proof it works |
 
 So a two-line fix never gets buried in ceremony, and a payment change never
@@ -194,6 +200,15 @@ skips review. Thirteen companion skills cover the techniques: writing a brief,
 planning, debugging properly, TDD, shipping, security audits, browser QA, and
 more — including `grill-me`, which interrogates your plan until you've both
 thought it through.
+
+For normal T2 work, you review what you want, how the agent will do it, and how
+it will check the result in one proposal. If you already approved that scope
+and approach, the agent continues without asking again. Risky T3 work keeps
+separate spec and plan approvals.
+
+The workflow and default rules also guide the agent to write clear, connected
+explanations: start with the result, explain why it matters, and keep useful
+technical detail. Short answers should still make sense on the first reading.
 
 These skills are adapted from open-source work by Jesse Vincent, Matt Pocock,
 Garry Tan, and RampStack Co. — see [ATTRIBUTION.md](ATTRIBUTION.md). One

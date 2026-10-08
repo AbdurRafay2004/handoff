@@ -1,22 +1,23 @@
 ---
 name: brief
-description: Use when starting any new feature or product request, before writing a plan or code — turns an idea into a short approved spec by surfacing the decisions that will hurt later. Depth scales with risk tier.
+description: Use when starting a new feature or product request — clarifies scope and decisions before implementation. Supplies a short summary for T2's combined brief/plan review or a written spec for T3. Depth scales with risk tier.
 ---
 
 # Brief
 
 Part of the **Brief** phase — see the `workflow` skill for tiers and sequencing.
 
-Turn an idea into a clear, approved spec through collaborative dialogue. The
+Turn an idea into clear scope through collaborative dialogue. The
 user speaks as PM/architect (what and why); you interrogate as the senior
 engineer until the 2–3 decisions that would hurt later are settled — scope,
-edge cases, failure paths — then STOP. Don't design the universe.
+edge cases, failure paths — then stop asking. Don't design the universe.
 
 ## Tier scaling
 
 - **T1 (trivial):** skip this skill entirely. Just do the task.
-- **T2 (standard):** a few targeted questions in chat, a 3–6 line spec summary,
-  user says "yes, that's what I want." No document needed.
+- **T2 (standard):** ask targeted questions only where requirements are unclear.
+  Draft a 3–6 line scope summary for the workflow's combined brief/plan review.
+  No separate brief sign-off and no document needed.
 - **T3 (risky — money/auth/data/migrations):** full interrogation, written spec,
   explicit approval before planning.
 
@@ -59,8 +60,9 @@ doesn't need.
 
 **Present the design, scaled to complexity** — a few sentences for simple
 work, sections for nuanced work (architecture, components, data flow, error
-handling, testing). Ask after each section whether it looks right. Go back and
-clarify when something doesn't make sense.
+handling, testing). For T2, collect feedback in the combined brief/plan review
+rather than asking for approval of each section. For T3, validate major
+sections incrementally. Go back and clarify when something doesn't make sense.
 
 **Design for isolation and clarity.** Break the system into units with one
 clear purpose each, communicating through well-defined interfaces. For each
@@ -93,14 +95,14 @@ self-review it with fresh eyes:
    make it explicit.
 
 Fix issues inline, then ask the user to review the spec before proceeding.
-Only move to the `plan` skill once they approve.
+For T3, get spec approval before planning.
 
 ## Key principles
 
 - One question at a time; multiple choice preferred; recommendation attached.
 - Explore the codebase instead of asking what it can answer.
 - YAGNI ruthlessly. Explore 2–3 alternatives before settling.
-- Incremental validation — approval per section, not one big reveal.
+- Validate unclear decisions early; avoid separate section approvals for T2.
 - Surface failure paths early; they are where specs go wrong.
 - Stop when the load-bearing decisions are settled.
 

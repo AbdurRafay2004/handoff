@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.1 — 2026-10-08
+
+- Combine the T2 brief and plan into one proposal and approval. Reuse approval
+  already given for the same scope and approach; keep separate T3 approvals.
+- Add guidance for clear, connected explanations to the workflow and default
+  RULES, preserving useful technical detail and the user's requested depth.
+- Align the brief, plan, and workflow docs, and explain how existing repos can
+  adopt the communication rules without overwriting their project rules.
+
 ## 2.1.0 — 2026-10-08
 
 - Add a Codex manifest alongside the Claude manifest, using the same skills,

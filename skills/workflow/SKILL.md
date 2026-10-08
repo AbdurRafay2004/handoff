@@ -27,25 +27,55 @@ precedence, including authorization already given in the conversation.
 its own sake.** When a heavier process is invoked on a lighter task, say so and
 offer the lighter path before proceeding.
 
+## Communication
+
+Write so the user can understand the answer on the first reading.
+
+- Lead with the result or recommendation, explain why it matters, and give the
+  next step when one is needed.
+- Use complete, connected sentences with one main idea each. Explain how facts
+  relate instead of stacking labels or sentence fragments.
+- Name the actual thing you mean. Prefer familiar words and active verbs; avoid
+  vague labels, invented compound terms, and bureaucratic wording. Explain an
+  unfamiliar technical term briefly when it is needed.
+- Keep technical details and evidence when they help the user understand or
+  assess the result. Respect the user's requested depth and format. Use short
+  steps when they make an explanation easier to follow. Keep enough explanation
+  for the answer to make sense.
+
+Before sending, reread for meaning and flow. Rewrite any sentence the user
+would need to decode. For example: "The code was uploaded, but we haven't
+checked whether the live website is running that version."
+
 ## Risk tiers
 
 | Tier | What it covers | Process |
 |---|---|---|
 | **T1 — trivial** | copy, styling, config tweaks, small isolated edits | No plan. Edit inline → typecheck + lint → done. |
-| **T2 — standard** | typical features, refactors within one area | Short plan (a few bullets, in-chat OK) → build inline → tests on the affected path → one review pass → evidence. |
+| **T2 — standard** | typical features, refactors within one area | Brief + short plan together → one approval → build inline → tests on the affected path → one review pass → evidence. |
 | **T3 — risky** | money, auth, user data, migrations, deletes, cross-cutting changes | Written plan the user approves → TDD → security review → end-to-end verify → evidence at every gate. |
 
 Declare the tier when starting a task. If the tier is wrong, the user corrects
 it in one line ("this is T1") and that ruling stands.
 
+For T2, present one short proposal: what the user wants, how you will do it,
+and how you will verify it. Ask for approval once, after both the brief and
+plan are ready; do not stop for a separate brief sign-off. If the user has
+already approved that scope and approach in the conversation, use that approval
+and continue. Ask again only if the scope, approach, or risk changes materially.
+T1 still skips brief and plan approval. T3 still requires spec approval before
+planning and separate plan approval before building.
+
 ## The six phases
 
 1. **Brief** — user states what and why in product terms. Interrogate it briefly
-   (skill: `brief`) — surface the 2–3 decisions that will hurt later, then stop.
-   Gate: user says "yes, that's what I want."
+   (skill: `brief`) — surface the 2–3 decisions that will hurt later, then stop
+   asking. T2: carry the summary into the combined brief/plan proposal.
+   Gate (T3): user approves the written spec before planning.
 2. **Plan** — propose the approach and declare the tier (skill: `plan`, T2/T3
    only). Trade-offs explained in plain language, as to a PM.
-   Gate (T2/T3): user approves the plan.
+   Gate (T2): user approves the combined brief and plan once.
+   Gate (T3): user separately approves the written plan before building.
 3. **Build** — write the code. Inline by default; delegate to subagents only per
    the `delegate` skill's triggers (context pressure or true parallelism), never
    as ceremony. T3 builds test-first (skill: `tdd`). Run single test files often;

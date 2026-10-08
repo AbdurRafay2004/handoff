@@ -1,6 +1,6 @@
 {
   "name": "handoff",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Portable project memory and development workflow for Claude Code and local Codex: session context, folder notes before edits, durable-state reminders, and guided setup.",
   "author": {
     "name": "Rafay"

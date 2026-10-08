@@ -35,6 +35,21 @@ These ship with handoff and apply regardless of stack.
 11. Verify behavior with the project's verify commands (see `context/TECH_STACK.md`)
     before reporting completion.
 
+### Communication
+12. Write so the user can understand the answer on the first reading. Lead with
+    the result or recommendation, explain why it matters, and give the next step
+    when one is needed.
+13. Use complete, connected sentences with one main idea each. Explain how facts
+    relate instead of stacking labels or sentence fragments.
+14. Name the actual thing you mean. Prefer familiar words and active verbs;
+    avoid vague labels, invented compound terms, and bureaucratic wording.
+    Explain an unfamiliar technical term briefly when it is needed.
+15. Keep technical details and evidence when they help the user understand or
+    assess the result. Respect the user's requested depth and format. Use short
+    steps when helpful. Keep enough explanation for the answer to make sense.
+    Before sending, reread for meaning and flow; rewrite sentences the user
+    would need to decode.
+
 ## Project-Specific Rules
 <!-- Populated by `/handoff:setup` discovery and as the user establishes rules.
      Examples: build system, design tokens, content sources, API contracts,

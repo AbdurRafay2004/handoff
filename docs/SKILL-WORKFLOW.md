@@ -29,17 +29,27 @@ for hook setup and limitations.
 | Tier | What | Process |
 |---|---|---|
 | T1 | copy, styling, small edits | inline → typecheck+lint → done. No brief, no plan, no agents. |
-| T2 | normal features | short brief in chat → bullet plan → build → tests on affected path → review → evidence |
+| T2 | normal features | brief + bullet plan together → one approval → build → tests on affected path → review → evidence |
 | T3 | money, auth, user data, migrations | written spec I approve → plan I approve → TDD → security → full verify → runbook ship → retro |
 
 If heavy process lands on a light task: say "this is T1". That ruling stands.
 
+For T2, review the scope, approach, and verification together. Approval already
+given for the same scope and approach counts; don't ask again unless something
+materially changes. T3 keeps separate spec and plan approvals.
+
+Responses should explain the result and why it matters in complete, connected
+sentences. Keep useful technical detail, name the actual things involved, and
+respect the user's requested depth. The workflow and default RULES carry this
+communication guidance.
+
 ## The pipeline, phase by phase
 
 1. **Brief** — `handoff:brief`. Questions one at a time, code cited
-   `path:line`, my approval on the spec.
+   `path:line`. T2: summary for the combined review; T3: my approval on the spec.
 2. **Plan** — `handoff:plan` (T2/T3). Premise challenged first; spikes for
    unknowns; `handoff:design` when interfaces/seams are the question.
+   T2: one combined brief/plan approval; T3: separate written plan approval.
 3. **Build** — inline by default. `handoff:tdd` (T3 mandatory).
    `handoff:delegate` ONLY for context-flooding work or true parallelism.
    `frontend-design` for UI. Bug → `handoff:debug`; 3+ failed fixes →
