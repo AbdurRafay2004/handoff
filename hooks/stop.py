@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stop hook (nudge to keep durable state fresh).
+"""Stop hook (nudge to keep durable state fresh and commit finished work).
 
 Nudges when the agent made NEW repo changes this session — committed or
 uncommitted — but didn't update STATUS / CHANGELOG / MAP, left a folder's
@@ -18,6 +18,8 @@ prompted this design):
   3. nudge signature   -> never nudge twice for the same unresolved situation,
                           even if the host omits stop_hook_active.
 
+Commit reminders also cover new uncommitted .handoff/ edits, even after state
+is updated. They are advisory: this hook never stages, commits, or pushes.
 Only fires in repos that have .handoff/ and are git repos.
 """
 import os
@@ -133,12 +135,15 @@ def main():
     # pre-existing dirt and must not be counted.
     committed = git_local_commit_codes(root, base_sha) or {}
     session_changed = dict(committed)
+    session_dirty = {}
     for p, c in codes.items():
         bc = base_codes.get(p)
         if bc is None:
             session_changed[p] = c
+            session_dirty[p] = c
         elif bc != "" and bc != c:
             session_changed[p] = c
+            session_dirty[p] = c
 
     new_work = [p for p in session_changed
                 if not p.startswith(AGENT_DIR + os.sep)]
@@ -147,7 +152,7 @@ def main():
     # (e.g. an autonomous loop idling at the gate) — check before the
     # no-new-work exit. Everything else requires new work.
     gate = read_file(os.path.join(root, AGENT_DIR, "GATE"))
-    if not new_work and not gate:
+    if not new_work and not session_dirty and not gate:
         sys.exit(0)
 
     # A durable-state file counts as updated if it changed this session
@@ -230,13 +235,20 @@ def main():
                      "idle at this gate. Delete .handoff/GATE once the user has "
                      "ruled".format(first))
 
+    if session_dirty and not gate:
+        notes.append("commit completed, verified changes within your authorized scope, "
+                     "including required Handoff documentation. Respect explicit instructions not to commit; "
+                     "leave unfinished or blocked work uncommitted and briefly explain why. "
+                     "Stage only intended changes, preserving unrelated user work and staged changes. "
+                     "Do not push. This reminder does not authorize bypassing approval gates")
+
     if not notes and not stray_note and not stale:
         sys.exit(0)
 
     # Loop-breaker 3: never repeat the same nudge. Signature covers what changed
     # and what we'd nag about; identical situation -> stay silent. Strays enter
     # the signature by their file list, independent of whether the note shows.
-    sig = signature("|".join(sorted(new_work)), "|".join(sorted(notes)),
+    sig = signature("|".join(sorted(set(new_work) | set(session_dirty))), "|".join(sorted(notes)),
                     "|".join(sorted(strays)), "|".join(sorted(stale)))
     if last_nudge_signature(session_id) == sig:
         sys.exit(0)

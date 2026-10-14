@@ -62,6 +62,9 @@ imports shared logic from `hooks/_common.py`:
   `.handoff/GATE` (machine-readable T3 stall). The nudge instructs that state
   updates ride in the SAME commit as the code (amend only if unpushed AND the last
   commit is this session's own work).
+  The same hook also reminds the agent to commit completed, verified session
+  changes, including Handoff-only edits, even when documentation is current.
+  It never stages or commits; user instructions and open gates take priority.
   Stop emits `decision: block` plus `reason`, the supported continuation response
   for both hosts. Context-only `hookSpecificOutput` is for SessionStart/PreToolUse.
 
@@ -93,7 +96,8 @@ regressions against them.
    resolve against `cwd`. Resolve symlinks before checking the boundary, and stop
    the walk-up at the root. Preserve these checks (original fix: commit d6810e4).
 6. **Changes under `.handoff/` are excluded** from the Stop hook's "new work" set, so
-   updating state doesn't itself trigger a nudge.
+   updating state doesn't itself trigger a documentation nudge. New uncommitted
+   state edits can trigger the separate commit reminder in the same Stop hook.
 
 ## Working / testing the hooks
 

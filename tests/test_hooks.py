@@ -208,6 +208,63 @@ def packaging_checks():
               proc.returncode == 0 and proc.stdout == "" and proc.stderr == "")
 
 
+
+def commit_reminder_checks():
+    for mode in ("unstaged", "staged", "untracked", "handoff-only"):
+        repo = make_repo()
+        app = os.path.join(repo, "app.py")
+        with open(app, "w") as fh:
+            fh.write("original\n")
+        subprocess.run(["git", "-C", repo, "add", "app.py"], check=True)
+        subprocess.run(["git", "-C", repo, "commit", "-qm", "baseline"], check=True)
+        # Unrelated user work must remain untouched and must not trigger alone.
+        with open(os.path.join(repo, "user.txt"), "w") as fh:
+            fh.write("user work\n")
+        payload = {"cwd": repo, "session_id": sid(), "stop_hook_active": False}
+        run_hook("sessionstart.py", payload)
+        out, code = run_hook("stop.py", payload)
+        check("commit: pre-existing dirt stays silent (" + mode + ")", code == 0 and not out)
+        target = (os.path.join(repo, ".handoff", "RULES.md") if mode == "handoff-only"
+                  else os.path.join(repo, "new.py") if mode == "untracked" else app)
+        with open(target, "a") as fh:
+            fh.write("session work\n")
+        for name in ("STATUS.md", "CHANGELOG.md", "MAP.md"):
+            with open(os.path.join(repo, ".handoff", name), "w") as fh:
+                fh.write("updated state\n")
+        if mode == "staged":
+            subprocess.run(["git", "-C", repo, "add", "app.py"], check=True)
+        before = subprocess.check_output(["git", "-C", repo, "status", "--porcelain"])
+        head = subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"])
+        out, code = run_hook("stop.py", payload)
+        reason = context_of(out) or ""
+        check("commit: reminds after docs updated (" + mode + ")", code == 0
+              and "commit completed, verified changes" in reason
+              and "explicit instructions not to commit" in reason
+              and "unrelated" in reason and "Do not push" in reason)
+        check("commit: hook never stages or commits (" + mode + ")",
+              before == subprocess.check_output(["git", "-C", repo, "status", "--porcelain"])
+              and head == subprocess.check_output(["git", "-C", repo, "rev-parse", "HEAD"]))
+        out, code = run_hook("stop.py", payload)
+        check("commit: unchanged reminder does not repeat (" + mode + ")", code == 0 and not out)
+        out, code = run_hook("stop.py", dict(payload, stop_hook_active=True))
+        check("commit: continuation guard remains silent (" + mode + ")", code == 0 and not out)
+        with open(os.path.join(repo, ".handoff", "GATE"), "w") as fh:
+            fh.write("Awaiting approval\n")
+        out, code = run_hook("stop.py", payload)
+        reason = context_of(out) or ""
+        check("commit: open gate takes priority (" + mode + ")", code == 0
+              and "gate is OPEN" in reason and "commit completed, verified changes" not in reason)
+        os.remove(os.path.join(repo, ".handoff", "GATE"))
+        subprocess.run(["git", "-C", repo, "add", "app.py", ".handoff"], check=True)
+        if mode == "untracked":
+            subprocess.run(["git", "-C", repo, "add", "new.py"], check=True)
+        subprocess.run(["git", "-C", repo, "commit", "-qm", "completed work"], check=True)
+        out, code = run_hook("stop.py", payload)
+        check("commit: unrelated dirt after commit stays silent (" + mode + ")", code == 0 and not out)
+        os.remove(os.path.join(repo, "user.txt"))
+        out, code = run_hook("stop.py", payload)
+        check("commit: clean tree stays silent (" + mode + ")", code == 0 and not out)
+
 def stop_contract_checks():
     repo = make_repo()
     os.makedirs(os.path.join(repo, "subfolder"))
@@ -236,7 +293,9 @@ def stop_contract_checks():
         with open(os.path.join(repo, ".handoff", name), "w") as fh:
             fh.write("state updated for new app.py\n")
     out, code = run_hook("stop.py", payload)
-    check("stop: updating required durable state ends the reminder", code == 0 and out == "")
+    check("stop: updated but uncommitted state gets a commit reminder", code == 0
+          and "commit completed, verified changes" in (context_of(out) or "")
+          and "STATUS.md was not updated" not in (context_of(out) or ""))
     out, code = run_hook("stop.py", dict(payload, session_id=sid()))
     check("stop: absent baseline stays silent", code == 0 and out == "")
 
@@ -345,6 +404,7 @@ def main():
     codex_edge_checks(repo)
     packaging_checks()
     stop_contract_checks()
+    commit_reminder_checks()
 
     # --- fail-safe invariant: malformed input never crashes any hook ---
     for name in ("sessionstart.py", "pre_edit_context.py", "stop.py"):

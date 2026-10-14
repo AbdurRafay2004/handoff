@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Extend the existing Stop hook with a default reminder to commit completed,
+  verified session changes, including Handoff-only work and changes remaining
+  after documentation updates. No extra hook, model call, staging or auto-commit.
+- Preserve user instructions, unrelated work, approval gates and all three Stop
+  loop-breakers. Clean trees and pre-existing dirt alone stay silent.
+- Add subprocess regressions for staged, unstaged, untracked and Handoff-only
+  changes, gate priority, cooldown, clean trees and read-only hook behavior.
+
 ## 2.1.1 — 2026-10-08
 
 - Combine the T2 brief and plan into one proposal and approval. Reuse approval

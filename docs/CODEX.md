@@ -62,6 +62,13 @@ Skills use the tools available in the current host. Claude-only question,
 review, or scheduling commands have explicit fallbacks; user and host
 instructions still take precedence over the workflow.
 
+The existing Stop hook also reminds agents to commit completed, verified session
+changes after required documentation updates. It includes staged, unstaged,
+untracked and Handoff-only changes detected against the session baseline.
+This is a default reminder, not an automatic Git operation: explicit no-commit
+instructions, unfinished work, unrelated user changes and open approval gates
+take precedence. The hook never stages, commits or pushes.
+
 ## Troubleshooting and limits
 
 - **No hooks fire:** confirm the installed copy is current, hooks are enabled,

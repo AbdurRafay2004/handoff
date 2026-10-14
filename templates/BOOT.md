@@ -58,6 +58,12 @@ otherwise a follow-up commit is acceptable.
     project-specific workflow future sessions need (major error recovered,
     non-obvious procedure, recurring task shape)
 
+After required updates, commit completed, verified changes within your authorized
+scope unless the user instructed otherwise. Stage only intended changes; preserve
+unrelated user work and staged changes. Leave unfinished or blocked work
+uncommitted and briefly explain why. Do not push without separate authorization.
+The Stop hook reminds you by default; it never stages or commits for you.
+
 ## Non-Negotiables
 
 The project's hard rules live in `RULES.md` (auto-loaded each session). This
