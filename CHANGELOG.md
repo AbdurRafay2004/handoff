@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.2 — 2026-10-14
 
 - Extend the existing Stop hook with a default reminder to commit completed,
   verified session changes, including Handoff-only work and changes remaining
