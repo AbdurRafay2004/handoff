@@ -31,6 +31,10 @@ Do not confuse the two layers:
   the code. Editing here changes what newly-set-up repos get; it does **not** affect
   already-set-up repos.
 
+The root **`tasks/`** folder (`inbox|now|done`, see `tasks/WORKFLOW.md`) is this
+repo's own development backlog. It is not plugin payload and no hook reads it —
+don't confuse it with `templates/tasks/`.
+
 ## Runtime model (how the pieces connect)
 
 Everything is driven by three hooks registered in `hooks/hooks.json` (auto-loaded
