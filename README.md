@@ -38,8 +38,9 @@ It keeps memory in **plain markdown files, inside your repo, committed with
 your code**. A few small hooks make sure the right file reaches the agent at
 the right moment — and nothing more:
 
-- When a session starts, the agent gets the current status and your project
-  rules. That's it — a few hundred tokens, not thousands.
+- When a session starts, the agent gets the current status, your project
+  rules, and a short reminder to state each task's risk tier (loading the
+  `workflow` skill for T2/T3). That's it — a few hundred tokens, not thousands.
 - When it's about to edit a file in a folder that has notes (`CONTEXT.md`),
   those notes get injected right then. Not before.
 - When a session ends having changed code — committed or not — without
@@ -47,6 +48,10 @@ the right moment — and nothing more:
   in the same commit as the code. It knows the difference between your
   session's work and dirt that was already there, and it never nags twice
   about the same thing.
+- When a session's context grows past 200k tokens (and again at 400k, 600k…),
+  the agent is asked once to leave a handoff a fresh session can continue
+  from, and to tell you a new session would be cheaper — even if the turn was
+  only discussion.
 - Unfinished work doesn't vanish with the session. Follow-ups, bugs, and ideas
   become small task files in a backlog inside the repo — written so that any
   future session can pick one up cold and know when it's done ([more
@@ -114,10 +119,16 @@ agent to merge the Communication section from the plugin's bundled
   CHANGELOG.md    # what changed and why (read when needed)
   context/        # stable notes: product intent, tech stack
   tasks/          # a real backlog: inbox / now / done
+  handoffs/       # optional overflow notes for the next session (listed, not loaded)
 ```
 
 Plus optional `CONTEXT.md` files in folders that need explaining — those load
 only when the agent edits there.
+
+To check the memory for drift, say "check handoff". The setup skill runs a
+read-only lint that reports task files whose folder and status disagree, MAP.md
+and CONTEXT.md paths that no longer exist, leftover template placeholders, an
+oversized STATUS.md, and CONTEXT.md notes that fell behind their folder.
 
 The whole idea in one sentence: **the files that are always relevant are
 pushed every session; everything else costs nothing until it's actually
@@ -201,6 +212,13 @@ planning, debugging properly, TDD, shipping, security audits, browser QA, and
 more — including `grill-me`, which interrogates your plan until you've both
 thought it through.
 
+One more keeps the sessions themselves lean: say "audit context" and
+`context-audit` lists every plugin, MCP server and skill that loads for this
+project, with a rough per-session token cost, checks them against what the
+project actually uses, and proposes turning off the unused ones for this
+project only (in `.claude/settings.local.json`). Nothing changes until you
+approve. On Codex it reports and leaves the edits to you.
+
 For normal T2 work, you review what you want, how the agent will do it, and how
 it will check the result in one proposal. If you already approved that scope
 and approach, the agent continues without asking again. Risky T3 work keeps
@@ -223,8 +241,9 @@ disable the original packs to avoid duplicate instructions.
   do, including all files in a patch and both sides of a move.
 - On very large repos, git commands in the hooks time out after 10 seconds;
   when that happens the affected check quietly skips that turn.
-- `/compact` resets the session's change tracking — work done before a
-  compaction may not get the end-of-turn reminder afterward.
+- Change tracking survives `/compact` and resuming a session, but it lives in
+  the system temp folder: if that is cleared (for example by a reboot), work
+  done before then may not get the end-of-turn reminder.
 - Work you've already pushed doesn't trigger the reminder (deliberate: the
   hook would rather stay quiet than nag about published commits), and the
   very first turn after adopting the hooks is silent while it takes its

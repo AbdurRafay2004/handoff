@@ -58,6 +58,14 @@ reminder in `reason`. It does not deny a tool. The old
 continuation contract. All three loop-breakers remain: `stop_hook_active`,
 the session git baseline, and the unresolved-reminder signature cooldown.
 
+The `context-audit` skill reads Codex plugins and MCP servers from
+`config.toml` (user and project) but only reports; it never edits Codex config.
+
+The large-session handoff reminder reads `transcript_path` from the Stop
+payload. In a Codex rollout it uses the latest `token_count` event's
+`last_token_usage.input_tokens`; if the path is absent, unreadable, or holds no
+such record, that reminder is skipped and the rest of the hook is unaffected.
+
 Skills use the tools available in the current host. Claude-only question,
 review, or scheduling commands have explicit fallbacks; user and host
 instructions still take precedence over the workflow.
@@ -83,8 +91,8 @@ take precedence. The hook never stages, commits or pushes.
 - **Public plugin directory:** plugins with lifecycle hooks must be distributed
   through manual Codex installation; they are not eligible for public directory
   submission with those hooks included.
-- **Existing change-tracking limits:** compaction captures a new baseline;
-  already-pushed commits and same-status edits to pre-existing dirty files may
+- **Existing change-tracking limits:** resume and compaction keep the
+  session's baseline when the same session id comes back; already-pushed commits and same-status edits to pre-existing dirty files may
   be missed. Git command timeouts and errors skip the affected check quietly.
 
 ## Verification

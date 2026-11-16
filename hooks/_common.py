@@ -214,6 +214,37 @@ def git_local_commit_codes(root, base_sha, cap=50):
     return codes
 
 
+def git_amendable_head(root, base_sha):
+    """Short sha of HEAD when it is safe to suggest amending it, else None.
+
+    Safe = HEAD is a local-only (unpushed) commit made since base_sha and is
+    not a merge. Whether it is the agent's own work can't be proven (the user
+    may commit from another terminal), so callers must word advice as hedged.
+    """
+    if not base_sha:
+        return None
+    try:
+        local = subprocess.run(
+            ["git", "-C", root, "rev-list", "-n", "1", base_sha + "..HEAD",
+             "--not", "--remotes"],
+            capture_output=True, text=True, timeout=10,
+        )
+        parents = subprocess.run(
+            ["git", "-C", root, "rev-list", "--parents", "-n", "1", "HEAD"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if local.returncode != 0 or parents.returncode != 0:
+            return None
+        head = parents.stdout.split()
+        # rev-list A..HEAD lists newest first, so its first entry is HEAD
+        # itself only when HEAD is local-only and newer than the baseline.
+        if len(head) != 2 or local.stdout.strip() != head[0]:
+            return None
+        return head[0][:7]
+    except Exception:
+        return None
+
+
 def plugin_version():
     """The plugin's own manifest version, or None."""
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -39,6 +39,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: No third-party imports in hooks/
+      - name: No third-party imports in hooks/ or scripts/
         run: |
-          ! grep -rEn "^\s*(import|from)\s+(requests|yaml|toml|click|rich|pydantic)" hooks/
+          ! grep -rEn "^\s*(import|from)\s+(requests|yaml|toml|click|rich|pydantic)" hooks/ scripts/

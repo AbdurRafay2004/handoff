@@ -28,6 +28,8 @@ off, read `RULES.md` and `STATUS.md` first.
 - `<dir>/CONTEXT.md` — local architecture; read before editing inside a folder
   that has one *(the PreToolUse hook injects it automatically on first edit)*
 - `CHANGELOG.md` — when recent history matters
+- `handoffs/` — overflow notes from earlier sessions; SessionStart lists them
+  when any exist, so read only the one for the work you continue
 
 **Context budget rule:** if a file is not useful in most sessions, it does not
 belong in the default read path. Do not load archived docs, done tasks, or old
@@ -63,6 +65,34 @@ scope unless the user instructed otherwise. Stage only intended changes; preserv
 unrelated user work and staged changes. Leave unfinished or blocked work
 uncommitted and briefly explain why. Do not push without separate authorization.
 The Stop hook reminds you by default; it never stages or commits for you.
+
+## Keeping STATUS.md
+
+- Fixed slots only: Current State, Active Work (what is in progress plus its
+  immediate next action), Blockers. The "next step" lives inside Active Work.
+- Write there ONLY if the edit changes one of: current state / what am I
+  actively working on / what is blocking / what is the next step. Otherwise it
+  goes to `CHANGELOG.md` (something that happened), `tasks/` (future work), or
+  memory (a durable fact about the user).
+- A fresh session must be able to continue from it: what is in progress, the
+  exact next step, anything uncommitted or unverified, decisions made only in chat.
+- Target 25 lines or fewer. If it grows past that, prune into `CHANGELOG.md` / `tasks/`.
+- Does NOT belong there: "fixed a typo", "ran tests", per-file edit logs,
+  anything already in CHANGELOG/tasks, long rationales.
+
+## Session handoffs (overflow)
+
+When a session leaves more for the next one than STATUS.md can hold — what was
+tried and failed, decisions made only in chat, where each workstream stands —
+write `handoffs/YYYY-MM-DD-topic.md`, one file per workstream, and keep STATUS.md
+short. Only then: if every session writes one, nobody reads them.
+
+- Not for future work (`tasks/`) or history (`CHANGELOG.md`) — only session
+  knowledge the next session needs to pick up.
+- SessionStart lists open handoffs with their age; no pointer in STATUS.md needed.
+- Once a session has absorbed a handoff (acted on it or moved what lasts into
+  STATUS/tasks/CHANGELOG), delete the file — git keeps the history. Treat one
+  older than two weeks as possibly stale and verify it before trusting it.
 
 ## Non-Negotiables
 

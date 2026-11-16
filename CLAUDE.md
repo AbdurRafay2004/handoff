@@ -9,10 +9,12 @@ This repo **is a Claude Code and local Codex plugin** named `handoff`. It is not
 It ships a hook-driven **project-memory** system plus an owned **development
 workflow layer** that other repos install. There is no build step and no
 dependency tree — the deliverable is Python hook scripts (stdlib only), a skill
-set, and a template tree. CI (`.github/workflows/ci.yml`) runs the stdlib smoke
+set, a template tree, and two read-only scripts: `scripts/handoff_lint.py` (run by
+`setup`) and `scripts/context_inventory.py` (run by `context-audit`). CI (`.github/workflows/ci.yml`) runs the stdlib smoke
 tests in `tests/test_hooks.py` on every push/PR.
 
-The skill set (v1.2.0+): `setup` (scaffolding), `workflow` (the 6-phase,
+The skill set (v1.2.0+): `setup` (scaffolding and drift lint), `context-audit`
+(per-project plugin/MCP/skill budget, via `scripts/context_inventory.py`), `workflow` (the 6-phase,
 risk-tiered pipeline — the constitution that owns sequencing), and thirteen
 technique skills (`brief`, `plan`, `design`, `tdd`, `debug`, `architecture`,
 `delegate`, `verify-done`, `security`, `browser-qa`, `ship`, `learn`,
@@ -43,9 +45,10 @@ declare a `hooks` field; see commit 1844000). Each hook is a thin `python3` entr
 imports shared logic from `hooks/_common.py`:
 
 - **`sessionstart.py`** (SessionStart) — if the target repo has `.handoff/`, injects
-  `STATUS.md` + `RULES.md` in full plus an on-demand pointer, captures a git baseline
+  `STATUS.md` + `RULES.md` in full plus an on-demand pointer and a one-line list of
+  open overflow notes in `.handoff/handoffs/` (with age from the date prefix), captures a git baseline
   for the session (**HEAD sha + dirty paths with status codes** — so the Stop hook sees
-  committed work too), and checks `.handoff/VERSION` against the plugin version
+  committed work too; kept on `resume`/`compact` if one exists), and checks `.handoff/VERSION` against the plugin version
   (template-drift nag; missing stamp nags once per repo). If no `.handoff/`, emits a
   **one-time** "run setup" tip per repo (marker file in `~/.cache/handoff/`) and stays
   silent forever after.
@@ -63,9 +66,15 @@ imports shared logic from `hooks/_common.py`:
   stranded in the `tasks/` root (shown once per session per stray-set), `STATUS.md`
   over 40 lines, **sentinel paths** (auth/migration/billing/… — configurable via
   `.handoff/SENTINELS`, forces the T3 question into the transcript), and an open
-  `.handoff/GATE` (machine-readable T3 stall). The nudge instructs that state
-  updates ride in the SAME commit as the code (amend only if unpushed AND the last
-  commit is this session's own work).
+  `.handoff/GATE` (machine-readable T3 stall). The nudge says STATUS.md must let a
+  fresh session continue, and gives one computed line of commit advice: same
+  commit as pending code; else amend if HEAD is an unpushed, non-merge commit
+  since the baseline (hedged "if it is your work"); else a follow-up commit.
+  Separately, once per 200k-token step of session context (read from the
+  latest usage record in `transcript_path`, never file size; Claude and Codex
+  formats; absent/unreadable → skipped), it asks for a next-session handoff even
+  with no repo changes. It has its own per-step marker and still sits behind
+  `stop_hook_active`.
   The same hook also reminds the agent to commit completed, verified session
   changes, including Handoff-only edits, even when documentation is current.
   It never stages or commits; user instructions and open gates take priority.
@@ -126,7 +135,7 @@ No output + exit 0 is the common (correct) result — most invocations are inten
 silent. Session state (git baseline, nudge signature, per-CONTEXT.md dedup markers) lives
 in `<tmp>/handoff-session-<hash>/`; delete that dir to reset a "session" between tests.
 
-Keep hooks **stdlib-only** — no third-party imports. `templates/` is markdown plus
+Keep hooks and `scripts/` **stdlib-only** — no third-party imports. `templates/` is markdown plus
 `.gitkeep` files only.
 
 ## The setup skill
@@ -152,7 +161,7 @@ a release is only live after `git push`.
 ## Further reading
 
 - `README.md` — install/use, design notes, and the documented **known limitations**
-  (Bash edits bypass CONTEXT injection, `git status` 10s timeout, `/compact` re-baselining,
+  (Bash edits bypass CONTEXT injection, `git status` 10s timeout, baseline lost if temp is cleared,
   non-git repos disable the Stop nudge).
 - `docs/SKILL-WORKFLOW.md` — how handoff (the state/context layer) composes with other
   skill families rather than replacing them.

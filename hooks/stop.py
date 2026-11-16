@@ -18,10 +18,16 @@ prompted this design):
   3. nudge signature   -> never nudge twice for the same unresolved situation,
                           even if the host omits stop_hook_active.
 
+Large-session handoff: once per LARGE_SESSION_STEP of context (from the
+transcript's latest usage record), ask for a handoff a fresh session can
+continue from, even with no repo changes. It has its own per-step marker and
+runs only after the stop_hook_active guard; any transcript problem skips it.
+
 Commit reminders also cover new uncommitted .handoff/ edits, even after state
 is updated. They are advisory: this hook never stages, commits, or pushes.
 Only fires in repos that have .handoff/ and are git repos.
 """
+import json
 import os
 import re
 import sys
@@ -31,12 +37,15 @@ from _common import (  # noqa: E402
     read_stdin_json, project_root, has_handoff, emit, AGENT_DIR,
     git_status_codes, git_head, git_local_commit_codes, load_baseline,
     save_baseline, last_nudge_signature, set_nudge_signature, signature,
+    git_amendable_head,
     read_file, session_marker_dir, marker_seen, marker_set, _short,
 )
 
 TASKS_ROOT_ALLOWED = ("WORKFLOW.md", "TEMPLATE.md")
 STRUCTURAL_LETTERS = "?ADRCT"  # untracked/added/deleted/renamed/copied/typechange
 STATUS_LINE_BUDGET = 40        # nudge threshold; the documented target is <=25
+LARGE_SESSION_STEP = 200000   # nudge once per 200k tokens of context crossed
+TRANSCRIPT_TAIL_BYTES = 4 * 1024 * 1024  # usage records sit near the end
 DEFAULT_SENTINELS = ("migration", "auth", ".env", "stripe", "billing",
                      "payment", "schema", "secret")
 
@@ -101,6 +110,80 @@ def sentinel_hit(path, pats):
     return False
 
 
+def large_session_tokens(payload):
+    """Context size of the session's latest main-thread model call, or None.
+
+    Reads the tail of the host transcript: Claude Code assistant records carry
+    message.usage (input + cache read + cache creation = context sent); Codex
+    rollouts carry event_msg/token_count with last_token_usage.input_tokens.
+    File size is NOT used: transcripts keep growing after /compact.
+    """
+    path = payload.get("transcript_path")
+    if not isinstance(path, str) or not path:
+        return None
+    try:
+        with open(path, "rb") as fh:
+            fh.seek(0, os.SEEK_END)
+            size = fh.tell()
+            fh.seek(max(0, size - TRANSCRIPT_TAIL_BYTES))
+            tail = fh.read().decode("utf-8", errors="replace")
+    except Exception:
+        return None
+    for line in reversed(tail.splitlines()):
+        if '"usage"' not in line and '"token_count"' not in line:
+            continue
+        try:
+            rec = json.loads(line)
+        except Exception:
+            continue
+        if not isinstance(rec, dict):
+            continue
+        try:
+            msg = rec.get("message")
+            if rec.get("type") == "assistant" and not rec.get("isSidechain") \
+                    and isinstance(msg, dict) and isinstance(msg.get("usage"), dict):
+                u = msg["usage"]
+                n = sum(int(u.get(k) or 0) for k in ("input_tokens", "cache_read_input_tokens",
+                                                      "cache_creation_input_tokens"))
+                if n > 0:
+                    return n
+            pl = rec.get("payload")
+            if rec.get("type") == "event_msg" and isinstance(pl, dict) \
+                    and pl.get("type") == "token_count":
+                n = int(((pl.get("info") or {}).get("last_token_usage") or {})
+                        .get("input_tokens") or 0)
+                if n > 0:
+                    return n
+        except Exception:
+            continue
+    return None
+
+
+def large_session_note(payload, session_id):
+    """(marker_path, note) when the context crossed a new LARGE_SESSION_STEP, else None.
+
+    Fires once per step per session (own marker, independent of the nudge
+    signature), with or without repo changes, so a handoff is written before
+    the user restarts a big session.
+    """
+    tokens = large_session_tokens(payload)
+    if not tokens or tokens < LARGE_SESSION_STEP:
+        return None
+    step = tokens // LARGE_SESSION_STEP
+    marker = os.path.join(session_marker_dir(session_id), "large-{}".format(step))
+    if marker_seen(marker):
+        return None
+    note = ("handoff: this session's context is about {}k tokens. Before the user "
+            "leaves or restarts, make sure a fresh session can continue from the repo "
+            "alone: STATUS.md covers what is in progress, the exact next step, anything "
+            "uncommitted or unverified, and decisions made only in chat; detail that "
+            "won't fit goes in .handoff/handoffs/YYYY-MM-DD-topic.md. Commit those state "
+            "updates under the usual rules (skip the edits if STATUS.md already does "
+            "this). Then tell the user in one line that this session is large and a "
+            "fresh session would continue more cheaply.").format(tokens // 1000)
+    return marker, note
+
+
 def main():
     payload = read_stdin_json()
     if not payload:
@@ -114,10 +197,20 @@ def main():
     if not has_handoff(root):
         sys.exit(0)
 
+    large = large_session_note(payload, payload.get("session_id"))
+    fresh = freshness_message(root, payload.get("session_id"))
+    if not large and not fresh:
+        sys.exit(0)
+    if large:
+        marker_set(large[0])
+    emit("Stop", "\n\n".join(part for part in (fresh, large and large[1]) if part))
+
+
+def freshness_message(root, session_id):
+    """The state-freshness / commit nudge text, or None when there is nothing new."""
     codes = git_status_codes(root)
     if codes is None:  # not a git repo / git error -> freshness nudge disabled
-        sys.exit(0)
-    session_id = payload.get("session_id")
+        return None
 
     # Loop-breaker 2: compare to the session baseline. If SessionStart never
     # captured one (e.g. session predates this), establish it now and stay quiet
@@ -125,7 +218,7 @@ def main():
     base = load_baseline(session_id)
     if base is None:
         save_baseline(session_id, git_head(root), codes)
-        sys.exit(0)
+        return None
     base_sha, base_codes = base
 
     # Session-changed = local-only commits since baseline HEAD (upstream
@@ -153,7 +246,7 @@ def main():
     # no-new-work exit. Everything else requires new work.
     gate = read_file(os.path.join(root, AGENT_DIR, "GATE"))
     if not new_work and not session_dirty and not gate:
-        sys.exit(0)
+        return None
 
     # A durable-state file counts as updated if it changed this session
     # (dirty-code change or local commit) OR is currently dirty at all — a
@@ -243,7 +336,7 @@ def main():
                      "Do not push. This reminder does not authorize bypassing approval gates")
 
     if not notes and not stray_note and not stale:
-        sys.exit(0)
+        return None
 
     # Loop-breaker 3: never repeat the same nudge. Signature covers what changed
     # and what we'd nag about; identical situation -> stay silent. Strays enter
@@ -251,7 +344,7 @@ def main():
     sig = signature("|".join(sorted(set(new_work) | set(session_dirty))), "|".join(sorted(notes)),
                     "|".join(sorted(strays)), "|".join(sorted(stale)))
     if last_nudge_signature(session_id) == sig:
-        sys.exit(0)
+        return None
     set_nudge_signature(session_id, sig)
     if stray_note:
         notes.append(stray_note)
@@ -259,14 +352,26 @@ def main():
     msg = ["handoff reminder — you changed project files this session:"]
     msg += ["  - " + n for n in notes]
     msg += ["  - {} may need updating for the folder you edited".format(c) for c in sorted(stale)]
+    # Uncommitted code still pending -> state goes in with that commit, so
+    # amend advice only applies once all session code is committed.
+    pending_code = any(not p.startswith(AGENT_DIR + os.sep) for p in session_dirty)
+    amend_sha = (git_amendable_head(root, base_sha)
+                 if committed and not pending_code else None)
+    if amend_sha:
+        commit_advice = ("HEAD ({}) is an unpushed, non-merge commit from this session: "
+                         "if it is your work, `git commit --amend` the state updates "
+                         "into it.".format(amend_sha))
+    elif committed and not pending_code:
+        commit_advice = ("HEAD can't safely be amended (pushed, a merge, or not from "
+                         "this session): use a follow-up commit.")
+    else:
+        commit_advice = "State updates ride in the same commit as the code they describe."
     msg.append("Update durable state before wrapping up (see .handoff/BOOT.md). "
-               "State updates ride in the SAME commit as the code they describe — "
-               "if you already committed, haven't pushed, AND the last commit is your "
-               "own work from this session (not a merge or someone else's), "
-               "`git commit --amend` the doc updates in; otherwise a follow-up commit "
-               "is acceptable. "
-               "If no update is warranted, you can ignore this — it won't repeat for the same changes.")
-    emit("Stop", "\n".join(msg))
+               "STATUS.md must let a fresh session continue: what is in progress, the "
+               "exact next step, anything uncommitted or unverified, and decisions made "
+               "only in chat — within its ~25-line target; detail that won't fit goes in .handoff/handoffs/YYYY-MM-DD-topic.md. " + commit_advice + " "
+               "If no update is warranted, ignore this — it won't repeat for the same changes.")
+    return "\n".join(msg)
 
 
 if __name__ == "__main__":

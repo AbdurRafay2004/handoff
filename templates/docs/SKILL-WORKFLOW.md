@@ -30,6 +30,9 @@ RULES manually from the host's instruction-file fallback.
 
 If heavy process lands on a light task: say "this is T1". That ruling stands.
 
+In repos with `.handoff/`, the SessionStart hook injects a short version of
+this table every session, so the tier gets declared without typing `/workflow`.
+
 For T2, review the scope, approach, and verification together. Approval already
 given for the same scope and approach counts; don't ask again unless something
 materially changes. T3 keeps separate spec and plan approvals.

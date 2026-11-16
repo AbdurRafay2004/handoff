@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Scaffold the handoff project-memory system into THIS repository (new or existing) — copies the template tree into .handoff/, then runs a guided discovery pass that drafts a real STATUS, MAP, TECH_STACK, and PRODUCT from the actual codebase and confirms with the user before saving. Use when the user says "set up handoff", "initialize handoff", "add project memory", or when a repo has no .handoff/ and the user wants one. Run once per repo.
+description: Scaffold the handoff project-memory system into THIS repository (new or existing) — copies the template tree into .handoff/, then runs a guided discovery pass that drafts a real STATUS, MAP, TECH_STACK, and PRODUCT from the actual codebase and confirms with the user before saving. Use when the user says "set up handoff", "initialize handoff", "add project memory", or when a repo has no .handoff/ and the user wants one. Run once per repo. Also runs the read-only drift check when the user says "check handoff", "lint handoff", or asks whether the memory is stale.
 ---
 
 # Set up handoff in this repo
@@ -14,8 +14,9 @@ before anything is saved.** Never invent project facts (RULES rule 5).
   to this skill file (i.e. `<plugin-root>/templates/`). Resolve that absolute path.
 - Check whether `.handoff/` already exists in the project root:
   - **Exists** → do NOT overwrite. Tell the user it's already set up; offer to
-    *refresh* specific files (e.g. re-run discovery for STATUS/MAP/TECH_STACK)
-    or seed a CONTEXT.md. Stop here unless they choose a refresh.
+    *refresh* specific files (e.g. re-run discovery for STATUS/MAP/TECH_STACK),
+    seed a CONTEXT.md, or run the drift check (section 7). Stop here unless
+    they choose one.
   - **Absent** → continue.
 
 ## 1. Copy the template tree
@@ -98,3 +99,21 @@ Also tell them the repo now has a tiered 6-phase workflow — point them at
 `.handoff/docs/SKILL-WORKFLOW.md` and the `workflow` skill.
 
 Add a dated line to `.handoff/CHANGELOG.md`: "Project initialized with handoff."
+
+## 7. Check for drift (existing installs)
+Run the bundled read-only lint, located like the templates at
+`../../scripts/handoff_lint.py` relative to this skill file:
+
+```sh
+python3 <plugin-root>/scripts/handoff_lint.py <project-root>
+```
+
+Exit 0 means clean, 1 means findings, and 2 means there is no `.handoff/`. It
+checks task folder vs frontmatter status, paths in MAP.md and folder
+CONTEXT.md files that exist nowhere in the repo, leftover `<UPPER_CASE>`
+placeholders, STATUS.md over 25 lines, and CONTEXT.md files whose folder had
+files added or removed (or 10+ commits) since the note was last committed.
+It never writes. Path checks match shorthand by suffix but still flag
+slash-separated lists such as `a/b/c` alternatives, so verify each path finding
+before acting. Present the real findings with a proposed fix for each, and edit
+nothing until the user approves.
